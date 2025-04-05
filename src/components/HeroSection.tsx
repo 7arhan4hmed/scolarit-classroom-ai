@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle } from 'lucide-react';
+import AssessmentCard from './AssessmentCard';
 
 const HeroSection = () => {
   return (
@@ -53,58 +54,7 @@ const HeroSection = () => {
           </div>
           
           <div className="w-full lg:w-1/2 relative">
-            <div className="bg-white rounded-xl shadow-xl border p-4 max-w-md mx-auto animate-float">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-10 h-10 rounded-full bg-brand-purple/20 flex items-center justify-center">
-                  <span className="font-medium text-brand-purple">AI</span>
-                </div>
-                <div>
-                  <h3 className="font-medium">Automated Assessment</h3>
-                  <p className="text-sm text-muted-foreground">Processing essay response...</p>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm">Student response on "The impact of climate change"</p>
-                  <div className="h-16 bg-gray-100 rounded mt-2"></div>
-                </div>
-                
-                <div className="bg-brand-blue/5 border-l-2 border-brand-blue rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-full bg-brand-blue/20 flex items-center justify-center">
-                      <span className="text-xs font-medium text-brand-blue">AI</span>
-                    </div>
-                    <h4 className="text-sm font-medium">Feedback Summary</h4>
-                  </div>
-                  <ul className="space-y-1">
-                    <li className="text-xs flex gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-brand-teal flex-shrink-0 mt-0.5" />
-                      <span>Strong thesis and supporting arguments</span>
-                    </li>
-                    <li className="text-xs flex gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-brand-teal flex-shrink-0 mt-0.5" />
-                      <span>Well-structured paragraphs with clear transitions</span>
-                    </li>
-                    <li className="text-xs flex gap-1.5">
-                      <CheckCircle className="h-3.5 w-3.5 text-brand-orange flex-shrink-0 mt-0.5" />
-                      <span>Consider adding more specific examples</span>
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className="text-sm font-medium">Score: </span>
-                    <span className="text-sm text-brand-blue font-semibold">86/100</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Edit</Button>
-                    <Button size="sm" className="bg-brand-blue hover:bg-brand-blue/90">Approve</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <AssessmentCard />
             
             {/* Decorative elements */}
             <div className="absolute -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-brand-blue/5 rounded-full blur-xl"></div>
