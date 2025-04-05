@@ -2,17 +2,18 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   return (
     <header className="border-b">
       <div className="container mx-auto flex items-center justify-between py-4">
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="rounded-lg bg-brand-blue p-1.5 text-white">
             <BookOpen size={24} />
           </div>
           <span className="text-xl font-bold font-display">EduGrade</span>
-        </div>
+        </Link>
         
         <nav className="hidden md:flex items-center gap-8">
           <a href="#features" className="text-sm font-medium hover:text-brand-blue transition-colors">
@@ -30,8 +31,10 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center gap-4">
-          <Button variant="outline" className="hidden md:inline-flex">
-            Log in
+          <Button variant="outline" className="hidden md:inline-flex" asChild>
+            <Link to="/login">
+              Log in
+            </Link>
           </Button>
           <Button className="bg-brand-blue hover:bg-brand-blue/90">
             Try for free
