@@ -1,6 +1,8 @@
 
-import React from 'react';
-import { Upload, Sparkles, CheckCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { Upload, Sparkles, CheckCheck, Check, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const steps = [
   {
@@ -20,7 +22,69 @@ const steps = [
   }
 ];
 
+const integrations = [
+  {
+    name: 'Google Classroom',
+    description: 'Connect EduGrade to your Google Classroom to automatically import classes, assignments, and student submissions.',
+    icon: '/google-classroom-icon.png',
+    active: true,
+    connectAction: 'connect-google'
+  },
+  {
+    name: 'Canvas',
+    description: 'Integrate with Canvas LMS to sync your courses and assignments.',
+    icon: '/canvas-icon.png',
+    active: false,
+    connectAction: 'connect-canvas'
+  },
+  {
+    name: 'Moodle',
+    description: 'Connect with Moodle to streamline your grading workflow.',
+    icon: '/moodle-icon.png',
+    active: false,
+    connectAction: 'connect-moodle'
+  },
+  {
+    name: 'Blackboard',
+    description: 'Coming soon: integrate EduGrade with Blackboard Learn.',
+    icon: '/blackboard-icon.png',
+    active: false,
+    connectAction: 'connect-blackboard'
+  }
+];
+
 const HowItWorksSection = () => {
+  const [connectingTo, setConnectingTo] = useState<string | null>(null);
+  const [connectedServices, setConnectedServices] = useState<string[]>(['Google Classroom']);
+  const { toast } = useToast();
+
+  const handleConnect = (integration: typeof integrations[0]) => {
+    if (!integration.active) {
+      toast({
+        title: "Coming Soon",
+        description: `${integration.name} integration is coming soon. Stay tuned!`,
+      });
+      return;
+    }
+
+    setConnectingTo(integration.name);
+    
+    // Simulate API connection
+    setTimeout(() => {
+      if (!connectedServices.includes(integration.name)) {
+        setConnectedServices([...connectedServices, integration.name]);
+      }
+      setConnectingTo(null);
+      
+      toast({
+        title: "Connected Successfully",
+        description: `Your ${integration.name} account is now connected to EduGrade.`,
+      });
+    }, 1500);
+  };
+
+  const isConnected = (name: string) => connectedServices.includes(name);
+  
   return (
     <section id="how-it-works" className="py-16 md:py-24 relative overflow-hidden">
       {/* Background gradient */}
@@ -56,13 +120,76 @@ const HowItWorksSection = () => {
         
         <div className="mt-20 bg-white rounded-xl border shadow-sm p-8 max-w-4xl mx-auto">
           <h3 className="text-2xl font-semibold mb-6 text-center">Seamlessly Integrates With Your Workflow</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {['Google Classroom', 'Canvas', 'Moodle', 'Blackboard'].map((platform, index) => (
-              <div key={index} className="border rounded-lg p-4 flex items-center justify-center h-24 bg-gray-50">
-                <span className="text-lg font-medium text-center text-gray-700">{platform}</span>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {integrations.map((integration, index) => (
+              <div key={index} className="border rounded-lg p-6 bg-gray-50 flex flex-col h-full">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-white rounded-md flex items-center justify-center shadow-sm">
+                    <img 
+                      src={integration.icon} 
+                      alt={`${integration.name} icon`} 
+                      className="h-8 w-8 object-contain"
+                      onError={(e) => {
+                        // Fallback if image doesn't load
+                        (e.target as HTMLImageElement).src = '/placeholder.svg';
+                      }}
+                    />
+                  </div>
+                  <h4 className="text-lg font-medium ml-3">{integration.name}</h4>
+                  {isConnected(integration.name) && (
+                    <span className="ml-auto flex items-center text-green-600 text-sm font-medium">
+                      <Check size={16} className="mr-1" />
+                      Connected
+                    </span>
+                  )}
+                </div>
+                
+                <p className="text-muted-foreground text-sm flex-grow mb-4">
+                  {integration.description}
+                </p>
+                
+                <Button 
+                  onClick={() => handleConnect(integration)}
+                  variant={isConnected(integration.name) ? "outline" : "default"}
+                  className={`w-full ${isConnected(integration.name) ? 'border-green-200 text-green-700 hover:bg-green-50' : 'bg-brand-blue hover:bg-brand-blue/90'}`}
+                  disabled={connectingTo !== null || (!integration.active && !isConnected(integration.name))}
+                >
+                  {connectingTo === integration.name ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2"></div>
+                      Connecting...
+                    </>
+                  ) : isConnected(integration.name) ? (
+                    <>
+                      <ExternalLink size={16} className="mr-2" />
+                      Manage Connection
+                    </>
+                  ) : (
+                    <>
+                      {integration.active ? 'Connect' : 'Coming Soon'}
+                    </>
+                  )}
+                </Button>
               </div>
             ))}
           </div>
+          
+          {isConnected('Google Classroom') && (
+            <div className="mt-8 p-5 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="text-lg font-medium text-green-800 mb-2">Google Classroom Connected!</h4>
+              <p className="text-green-700 mb-4">Your Google Classroom account is now connected to EduGrade. You can now:</p>
+              <ul className="list-disc pl-5 text-green-700 space-y-1">
+                <li>Import your classes and student roster</li>
+                <li>See assignments and due dates</li>
+                <li>Automatically collect submissions</li>
+                <li>Push grades and feedback directly to Google Classroom</li>
+              </ul>
+              <Button variant="outline" className="mt-4 border-green-300 text-green-700 hover:bg-green-100">
+                View Connected Classes
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </section>
