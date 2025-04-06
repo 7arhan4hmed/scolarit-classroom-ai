@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Upload, Sparkles, CheckCheck, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 const steps = [
   {
@@ -56,6 +57,10 @@ const integrations = [
 const HowItWorksSection = () => {
   const [connectingTo, setConnectingTo] = useState<string | null>(null);
   const [connectedServices, setConnectedServices] = useState<string[]>(['Google Classroom']);
+  const [activeStep, setActiveStep] = useState(0);
+  const [sampleAssignment, setSampleAssignment] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [result, setResult] = useState<{ grade: string; feedback: string } | null>(null);
   const { toast } = useToast();
 
   const handleConnect = (integration: typeof integrations[0]) => {
@@ -83,6 +88,60 @@ const HowItWorksSection = () => {
     }, 1500);
   };
 
+  const handleStepClick = (stepIndex: number) => {
+    if (stepIndex === 0 || (stepIndex === 1 && sampleAssignment.trim().length > 0) || 
+        (stepIndex === 2 && result !== null)) {
+      setActiveStep(stepIndex);
+    } else if (stepIndex === 1 && sampleAssignment.trim().length === 0) {
+      toast({
+        title: "Upload Required",
+        description: "Please enter a sample assignment first.",
+      });
+    }
+  };
+
+  const handleAssignmentSubmit = () => {
+    if (sampleAssignment.trim().length < 10) {
+      toast({
+        title: "Too Short",
+        description: "Please enter a longer sample assignment for analysis.",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+    setActiveStep(1);
+
+    // Simulate AI processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      setResult({
+        grade: "B+",
+        feedback: "Good work overall. The response demonstrates understanding of key concepts, but could benefit from more specific examples and clearer organization. Consider expanding on your analysis in the second paragraph."
+      });
+      setActiveStep(2);
+      
+      toast({
+        title: "Analysis Complete",
+        description: "Your sample assignment has been graded.",
+      });
+    }, 2000);
+  };
+
+  const handleApprove = () => {
+    toast({
+      title: "Feedback Approved",
+      description: "The grade and feedback have been approved and would be sent to the student in a real scenario.",
+    });
+    
+    // Reset the demo
+    setTimeout(() => {
+      setSampleAssignment('');
+      setResult(null);
+      setActiveStep(0);
+    }, 2000);
+  };
+
   const isConnected = (name: string) => connectedServices.includes(name);
   
   return (
@@ -100,15 +159,21 @@ const HowItWorksSection = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          {/* Connector line (visible on md screens and up) */}
-          <div className="absolute top-24 left-0 right-0 h-0.5 bg-brand-blue/20 hidden md:block"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative mb-16">
+          {/* Note: Removed the connector line as requested */}
           
           {steps.map((step, index) => (
-            <div key={index} className="flex flex-col items-center text-center">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center z-10 mb-6 ${
-                index === 0 ? "bg-brand-blue" : 
-                index === 1 ? "bg-brand-purple" : "bg-brand-teal"
+            <div 
+              key={index} 
+              className={`flex flex-col items-center text-center cursor-pointer transition-all duration-300 ${
+                activeStep === index ? 'scale-105' : 'opacity-80 hover:opacity-100'
+              }`}
+              onClick={() => handleStepClick(index)}
+            >
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center z-10 mb-6 transition-colors ${
+                index === activeStep ? 
+                  (index === 0 ? "bg-brand-blue" : index === 1 ? "bg-brand-purple" : "bg-brand-teal") : 
+                  "bg-gray-300"
               }`}>
                 {step.icon}
               </div>
@@ -118,7 +183,83 @@ const HowItWorksSection = () => {
           ))}
         </div>
         
-        <div className="mt-20 bg-white rounded-xl border shadow-sm p-8 max-w-4xl mx-auto">
+        {/* Interactive Demo Area */}
+        <div className="max-w-4xl mx-auto bg-white rounded-xl border shadow-sm p-8 mb-16">
+          <h3 className="text-xl font-semibold mb-6 text-center">Try It Yourself</h3>
+          
+          {activeStep === 0 && (
+            <div className="animate-fade-in">
+              <p className="mb-4 text-center text-muted-foreground">Enter a sample student response to see how EduGrade works:</p>
+              <Textarea
+                value={sampleAssignment}
+                onChange={(e) => setSampleAssignment(e.target.value)}
+                placeholder="Paste a student essay or short answer response here..."
+                className="min-h-[150px] mb-4"
+              />
+              <div className="flex justify-center">
+                <Button 
+                  onClick={handleAssignmentSubmit}
+                  className="bg-brand-blue hover:bg-brand-blue/90"
+                >
+                  Submit for Analysis
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          {activeStep === 1 && (
+            <div className="animate-fade-in text-center">
+              <Sparkles className="h-16 w-16 text-brand-purple mx-auto mb-4" />
+              <h4 className="text-lg font-medium mb-2">AI is analyzing the submission...</h4>
+              <p className="text-muted-foreground mb-6">
+                Our AI is evaluating the response against standard rubrics and looking for key concepts.
+              </p>
+              <div className="flex justify-center">
+                <div className="h-2 w-64 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-brand-purple animate-pulse rounded-full" style={{width: isProcessing ? '100%' : '0%', transition: 'width 2s ease-in-out'}}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeStep === 2 && result && (
+            <div className="animate-fade-in">
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="col-span-1 bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 text-center">Grade</h4>
+                  <div className="text-4xl font-bold text-brand-blue text-center">{result.grade}</div>
+                </div>
+                <div className="col-span-2 bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Feedback</h4>
+                  <p className="text-muted-foreground">{result.feedback}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center gap-4">
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setActiveStep(0);
+                    toast({
+                      title: "Edit Requested",
+                      description: "You can now modify the feedback before approving.",
+                    });
+                  }}
+                >
+                  Edit Feedback
+                </Button>
+                <Button 
+                  className="bg-brand-teal hover:bg-brand-teal/90"
+                  onClick={handleApprove}
+                >
+                  Approve & Send
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="bg-white rounded-xl border shadow-sm p-8 max-w-4xl mx-auto">
           <h3 className="text-2xl font-semibold mb-6 text-center">Seamlessly Integrates With Your Workflow</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

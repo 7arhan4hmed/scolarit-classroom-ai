@@ -1,6 +1,7 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Bot, Clock, BarChart4, BookOpen, FileText, Users } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 const features = [
   {
@@ -36,6 +37,20 @@ const features = [
 ];
 
 const FeaturesSection = () => {
+  const [expandedFeature, setExpandedFeature] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  const handleLearnMore = (index: number) => {
+    setExpandedFeature(expandedFeature === index ? null : index);
+  };
+
+  const handleFeatureDemo = (featureTitle: string) => {
+    toast({
+      title: `${featureTitle} Demo`,
+      description: `Launching demo for ${featureTitle}. This feature will be available in the full version.`,
+    });
+  };
+
   return (
     <section id="features" className="py-16 md:py-24 bg-gray-50">
       <div className="container mx-auto px-4">
@@ -58,7 +73,30 @@ const FeaturesSection = () => {
                 {feature.icon}
               </div>
               <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <p className="text-muted-foreground mb-4">{feature.description}</p>
+              
+              {expandedFeature === index && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg animate-fade-in">
+                  <h4 className="font-medium mb-2">How it works:</h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    This feature uses advanced algorithms to analyze student work against 
+                    rubrics and learning objectives, providing consistent and accurate assessments.
+                  </p>
+                  <button 
+                    onClick={() => handleFeatureDemo(feature.title)}
+                    className="text-sm font-medium text-brand-blue hover:text-brand-blue/80"
+                  >
+                    Try Demo
+                  </button>
+                </div>
+              )}
+              
+              <button 
+                onClick={() => handleLearnMore(index)} 
+                className="mt-2 text-sm font-medium text-brand-purple hover:text-brand-purple/80"
+              >
+                {expandedFeature === index ? 'Show Less' : 'Learn More'}
+              </button>
             </div>
           ))}
         </div>
