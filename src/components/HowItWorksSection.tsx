@@ -4,6 +4,7 @@ import { Upload, Sparkles, CheckCheck, Check, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+import { useNavigate } from 'react-router-dom';
 
 const steps = [
   {
@@ -62,6 +63,7 @@ const HowItWorksSection = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<{ grade: string; feedback: string } | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleConnect = (integration: typeof integrations[0]) => {
     if (!integration.active) {
@@ -74,7 +76,15 @@ const HowItWorksSection = () => {
 
     setConnectingTo(integration.name);
     
-    // Simulate API connection
+    if (integration.name === 'Google Classroom') {
+      setTimeout(() => {
+        setConnectingTo(null);
+        navigate('/google-classroom');
+      }, 1000);
+      return;
+    }
+    
+    // Simulate API connection for other integrations
     setTimeout(() => {
       if (!connectedServices.includes(integration.name)) {
         setConnectedServices([...connectedServices, integration.name]);
@@ -326,7 +336,11 @@ const HowItWorksSection = () => {
                 <li>Automatically collect submissions</li>
                 <li>Push grades and feedback directly to Google Classroom</li>
               </ul>
-              <Button variant="outline" className="mt-4 border-green-300 text-green-700 hover:bg-green-100">
+              <Button 
+                variant="outline" 
+                className="mt-4 border-green-300 text-green-700 hover:bg-green-100"
+                onClick={() => navigate('/google-classroom')}
+              >
                 View Connected Classes
               </Button>
             </div>
