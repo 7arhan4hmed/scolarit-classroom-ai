@@ -1,18 +1,19 @@
 
 import React from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Twitter, Linkedin, Facebook } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-50 border-t">
+    <footer className="bg-gradient-to-b from-gray-50 to-gray-100 border-t">
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-brand-blue p-1.5 text-white">
+              <div className="rounded-lg bg-[#005558] p-1.5 text-white">
                 <BookOpen size={24} />
               </div>
-              <span className="text-xl font-bold font-display">EduGrade</span>
+              <span className="text-xl font-bold font-display text-[#005558]">SCOLARIT</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Empowering educators with AI-powered grading and feedback tools.
@@ -21,49 +22,52 @@ const Footer = () => {
           </div>
           
           <div>
-            <h3 className="font-medium mb-4">Product</h3>
+            <h3 className="font-medium mb-4 text-[#005558]">Product</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Features</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Pricing</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Integrations</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Updates</a></li>
+              <li><Link to="/features" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Features</Link></li>
+              <li><Link to="/upload" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Upload Assignments</Link></li>
+              <li><Link to="/google-classroom" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Integrations</Link></li>
+              <li><Link to="/dashboard" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Dashboard</Link></li>
             </ul>
           </div>
           
           <div>
-            <h3 className="font-medium mb-4">Resources</h3>
+            <h3 className="font-medium mb-4 text-[#005558]">Resources</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Documentation</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Tutorials</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Blog</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Support</a></li>
+              <li><Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">How It Works</Link></li>
+              <li><Link to="/for-teachers" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">For Teachers</Link></li>
+              <li><Link to="/for-students" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">For Students</Link></li>
+              <li><a href="#" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Support</a></li>
             </ul>
           </div>
           
           <div>
-            <h3 className="font-medium mb-4">Company</h3>
+            <h3 className="font-medium mb-4 text-[#005558]">Company</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">About</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Careers</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Privacy</a></li>
-              <li><a href="#" className="text-sm text-muted-foreground hover:text-brand-blue">Terms</a></li>
+              <li><a href="#" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">About</a></li>
+              <li><a href="#" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Careers</a></li>
+              <li><a href="#" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Privacy</a></li>
+              <li><a href="#" className="text-sm text-muted-foreground hover:text-[#005558] transition-colors">Terms</a></li>
             </ul>
           </div>
         </div>
         
         <div className="border-t mt-12 pt-8 flex flex-col md:flex-row items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            © 2025 EduGrade AI. All rights reserved.
+            © 2025 SCOLARIT AI. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="text-muted-foreground hover:text-brand-blue">
-              Twitter
+            <a href="#" className="text-muted-foreground hover:text-[#005558] transition-colors">
+              <Twitter size={20} />
+              <span className="sr-only">Twitter</span>
             </a>
-            <a href="#" className="text-muted-foreground hover:text-brand-blue">
-              LinkedIn
+            <a href="#" className="text-muted-foreground hover:text-[#005558] transition-colors">
+              <Linkedin size={20} />
+              <span className="sr-only">LinkedIn</span>
             </a>
-            <a href="#" className="text-muted-foreground hover:text-brand-blue">
-              Facebook
+            <a href="#" className="text-muted-foreground hover:text-[#005558] transition-colors">
+              <Facebook size={20} />
+              <span className="sr-only">Facebook</span>
             </a>
           </div>
         </div>
