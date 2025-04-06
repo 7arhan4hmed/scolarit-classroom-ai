@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, Sparkles, BookOpen, GraduationCap, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle, Sparkles, BookOpen, GraduationCap, Zap, Award, BarChart, Users } from 'lucide-react';
 import AssessmentCard from './AssessmentCard';
 import { Link } from 'react-router-dom';
 import { BackgroundCellsDemo } from './ui/background-cells';
@@ -80,6 +80,41 @@ const HeroSection = () => {
             {/* Decorative elements */}
             <div className="absolute -z-10 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[#005558]/5 rounded-full blur-xl"></div>
             <div className="absolute -z-10 bottom-10 right-10 w-20 h-20 bg-[#005558]/10 rounded-full blur-lg"></div>
+          </div>
+        </div>
+        
+        {/* New statistics section */}
+        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#005558]/10 mb-4">
+              <Users className="h-6 w-6 text-[#005558]" />
+            </div>
+            <h3 className="text-3xl font-bold text-gray-900">10,000+</h3>
+            <p className="text-sm text-gray-500 mt-1">Educators Using SCOLARIT</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#005558]/10 mb-4">
+              <BookOpen className="h-6 w-6 text-[#005558]" />
+            </div>
+            <h3 className="text-3xl font-bold text-gray-900">500,000+</h3>
+            <p className="text-sm text-gray-500 mt-1">Assignments Processed</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#005558]/10 mb-4">
+              <BarChart className="h-6 w-6 text-[#005558]" />
+            </div>
+            <h3 className="text-3xl font-bold text-gray-900">98%</h3>
+            <p className="text-sm text-gray-500 mt-1">Accuracy Rate</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#005558]/10 mb-4">
+              <Award className="h-6 w-6 text-[#005558]" />
+            </div>
+            <h3 className="text-3xl font-bold text-gray-900">25+</h3>
+            <p className="text-sm text-gray-500 mt-1">Education Awards</p>
           </div>
         </div>
         
