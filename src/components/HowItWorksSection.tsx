@@ -15,7 +15,7 @@ const steps = [
   {
     icon: <Sparkles className="h-8 w-8 text-white" />,
     title: "AI Assessment",
-    description: "Our AI analyzes submissions using Google's Gemini API, applying your rubric and standards."
+    description: "Our AI analyzes submissions, applying your rubric and standards."
   },
   {
     icon: <CheckCheck className="h-8 w-8 text-white" />,
@@ -27,7 +27,7 @@ const steps = [
 const integrations = [
   {
     name: 'Google Classroom',
-    description: 'Connect EduGrade to your Google Classroom to automatically import classes, assignments, and student submissions.',
+    description: 'Connect SCOLARIT to your Google Classroom to automatically import classes, assignments, and student submissions.',
     icon: '/google-classroom-icon.png',
     active: true,
     connectAction: 'connect-google'
@@ -48,7 +48,7 @@ const integrations = [
   },
   {
     name: 'Blackboard',
-    description: 'Coming soon: integrate EduGrade with Blackboard Learn.',
+    description: 'Coming soon: integrate SCOLARIT with Blackboard Learn.',
     icon: '/blackboard-icon.png',
     active: false,
     connectAction: 'connect-blackboard'
@@ -93,7 +93,7 @@ const HowItWorksSection = () => {
       
       toast({
         title: "Connected Successfully",
-        description: `Your ${integration.name} account is now connected to EduGrade.`,
+        description: `Your ${integration.name} account is now connected to SCOLARIT.`,
       });
     }, 1500);
   };
@@ -144,12 +144,10 @@ const HowItWorksSection = () => {
       description: "The grade and feedback have been approved and would be sent to the student in a real scenario.",
     });
     
-    // Reset the demo
+    // Redirect to dashboard on approval
     setTimeout(() => {
-      setSampleAssignment('');
-      setResult(null);
-      setActiveStep(0);
-    }, 2000);
+      navigate('/dashboard');
+    }, 1000);
   };
 
   const isConnected = (name: string) => connectedServices.includes(name);
@@ -159,19 +157,8 @@ const HowItWorksSection = () => {
       {/* Background gradient */}
       <div className="absolute inset-0 gradient-bg opacity-[0.03] -z-10" />
       
-      <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            How EduGrade Works
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            A simple three-step process that transforms hours of grading into minutes of review.
-          </p>
-        </div>
-        
+      <div className="container mx-auto px-4">        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative mb-16">
-          {/* Note: Removed the connector line as requested */}
-          
           {steps.map((step, index) => (
             <div 
               key={index} 
@@ -182,7 +169,7 @@ const HowItWorksSection = () => {
             >
               <div className={`w-16 h-16 rounded-full flex items-center justify-center z-10 mb-6 transition-colors ${
                 index === activeStep ? 
-                  (index === 0 ? "bg-brand-blue" : index === 1 ? "bg-brand-purple" : "bg-brand-teal") : 
+                  (index === 0 ? "bg-[#005558]" : index === 1 ? "bg-[#005558]" : "bg-[#005558]") : 
                   "bg-gray-300"
               }`}>
                 {step.icon}
@@ -199,7 +186,7 @@ const HowItWorksSection = () => {
           
           {activeStep === 0 && (
             <div className="animate-fade-in">
-              <p className="mb-4 text-center text-muted-foreground">Enter a sample student response to see how EduGrade works:</p>
+              <p className="mb-4 text-center text-muted-foreground">Enter a sample student response to see how SCOLARIT works:</p>
               <Textarea
                 value={sampleAssignment}
                 onChange={(e) => setSampleAssignment(e.target.value)}
@@ -209,7 +196,7 @@ const HowItWorksSection = () => {
               <div className="flex justify-center">
                 <Button 
                   onClick={handleAssignmentSubmit}
-                  className="bg-brand-blue hover:bg-brand-blue/90"
+                  className="bg-[#005558] hover:bg-[#005558]/90"
                 >
                   Submit for Analysis
                 </Button>
@@ -219,14 +206,14 @@ const HowItWorksSection = () => {
           
           {activeStep === 1 && (
             <div className="animate-fade-in text-center">
-              <Sparkles className="h-16 w-16 text-brand-purple mx-auto mb-4" />
+              <Sparkles className="h-16 w-16 text-[#005558] mx-auto mb-4" />
               <h4 className="text-lg font-medium mb-2">AI is analyzing the submission...</h4>
               <p className="text-muted-foreground mb-6">
                 Our AI is evaluating the response against standard rubrics and looking for key concepts.
               </p>
               <div className="flex justify-center">
                 <div className="h-2 w-64 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-brand-purple animate-pulse rounded-full" style={{width: isProcessing ? '100%' : '0%', transition: 'width 2s ease-in-out'}}></div>
+                  <div className="h-full bg-[#005558] animate-pulse rounded-full" style={{width: isProcessing ? '100%' : '0%', transition: 'width 2s ease-in-out'}}></div>
                 </div>
               </div>
             </div>
@@ -237,7 +224,7 @@ const HowItWorksSection = () => {
               <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="col-span-1 bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-2 text-center">Grade</h4>
-                  <div className="text-4xl font-bold text-brand-blue text-center">{result.grade}</div>
+                  <div className="text-4xl font-bold text-[#005558] text-center">{result.grade}</div>
                 </div>
                 <div className="col-span-2 bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-2">Feedback</h4>
@@ -259,7 +246,7 @@ const HowItWorksSection = () => {
                   Edit Feedback
                 </Button>
                 <Button 
-                  className="bg-brand-teal hover:bg-brand-teal/90"
+                  className="bg-[#005558] hover:bg-[#005558]/90"
                   onClick={handleApprove}
                 >
                   Approve & Send
@@ -303,7 +290,7 @@ const HowItWorksSection = () => {
                 <Button 
                   onClick={() => handleConnect(integration)}
                   variant={isConnected(integration.name) ? "outline" : "default"}
-                  className={`w-full ${isConnected(integration.name) ? 'border-green-200 text-green-700 hover:bg-green-50' : 'bg-brand-blue hover:bg-brand-blue/90'}`}
+                  className={`w-full ${isConnected(integration.name) ? 'border-green-200 text-green-700 hover:bg-green-50' : 'bg-[#005558] hover:bg-[#005558]/90'}`}
                   disabled={connectingTo !== null || (!integration.active && !isConnected(integration.name))}
                 >
                   {connectingTo === integration.name ? (
@@ -329,7 +316,7 @@ const HowItWorksSection = () => {
           {isConnected('Google Classroom') && (
             <div className="mt-8 p-5 bg-green-50 border border-green-200 rounded-lg">
               <h4 className="text-lg font-medium text-green-800 mb-2">Google Classroom Connected!</h4>
-              <p className="text-green-700 mb-4">Your Google Classroom account is now connected to EduGrade. You can now:</p>
+              <p className="text-green-700 mb-4">Your Google Classroom account is now connected to SCOLARIT. You can now:</p>
               <ul className="list-disc pl-5 text-green-700 space-y-1">
                 <li>Import your classes and student roster</li>
                 <li>See assignments and due dates</li>

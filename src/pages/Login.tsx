@@ -48,10 +48,10 @@ const Login = () => {
       
       toast({
         title: "Login successful",
-        description: "Welcome back to EduGrade!",
+        description: "Welcome back to SCOLARIT!",
       });
       
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -73,13 +73,13 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="rounded-lg bg-brand-blue p-2 text-white">
+            <div className="rounded-lg bg-[#005558] p-2 text-white">
               <BookOpen size={28} />
             </div>
           </div>
           <h2 className="mt-6 text-3xl font-bold font-display text-gray-900">Welcome back</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to continue to EduGrade
+            Sign in to continue to SCOLARIT
           </p>
         </div>
         
@@ -141,7 +141,7 @@ const Login = () => {
             
             <div className="flex items-center justify-between">
               <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-brand-blue hover:text-brand-blue/80">
+                <Link to="/forgot-password" className="font-medium text-[#005558] hover:text-[#005558]/80">
                   Forgot your password?
                 </Link>
               </div>
@@ -149,7 +149,7 @@ const Login = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-brand-blue hover:bg-brand-blue/90 flex items-center justify-center gap-2"
+              className="w-full bg-[#005558] hover:bg-[#005558]/90 flex items-center justify-center gap-2"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -167,7 +167,7 @@ const Login = () => {
             
             <div className="text-center text-sm">
               <span className="text-gray-600">Don't have an account?</span>{" "}
-              <Link to="/signup" className="font-medium text-brand-blue hover:text-brand-blue/80">
+              <Link to="/signup" className="font-medium text-[#005558] hover:text-[#005558]/80">
                 Sign up
               </Link>
             </div>

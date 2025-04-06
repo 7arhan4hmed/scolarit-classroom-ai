@@ -1,44 +1,45 @@
 
 import React, { useState } from 'react';
-import { Bot, Clock, BarChart4, BookOpen, FileText, Users, ExternalLink } from 'lucide-react';
+import { Bot, Clock, BarChart4, BookOpen, FileText, Users, Eye } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { useNavigate } from 'react-router-dom';
 
 const features = [
   {
-    icon: <Bot className="h-8 w-8 text-brand-blue" />,
+    icon: <Bot className="h-8 w-8 text-[#005558]" />,
     title: "AI-Powered Grading",
-    description: "Automatically evaluate assignments, essays, and tests using Google's Gemini API and Vertex AI for consistent and objective assessment.",
+    description: "Automatically evaluate assignments, essays, and tests using AI for consistent and objective assessment.",
     demo: "ai-demo"
   },
   {
-    icon: <Clock className="h-8 w-8 text-brand-purple" />,
+    icon: <Clock className="h-8 w-8 text-[#005558]" />,
     title: "Save 70% of Grading Time",
     description: "Reduce your workload dramatically by automating repetitive assessment tasks while maintaining high-quality feedback.",
     demo: "time-demo"
   },
   {
-    icon: <FileText className="h-8 w-8 text-brand-teal" />,
+    icon: <FileText className="h-8 w-8 text-[#005558]" />,
     title: "Personalized Feedback",
     description: "Provide tailored comments and suggestions to each student based on their specific strengths and areas for improvement.",
     demo: "feedback-demo"
   },
   {
-    icon: <BarChart4 className="h-8 w-8 text-brand-orange" />,
+    icon: <BarChart4 className="h-8 w-8 text-[#005558]" />,
     title: "Detailed Analytics",
     description: "Track student progress and identify common misconceptions with comprehensive performance analytics and insights.",
     demo: "analytics-demo"
   },
   {
-    icon: <BookOpen className="h-8 w-8 text-brand-blue" />,
+    icon: <BookOpen className="h-8 w-8 text-[#005558]" />,
     title: "Curriculum Alignment",
     description: "Ensure assessments and feedback align perfectly with your curriculum standards and learning objectives.",
     demo: "curriculum-demo"
   },
   {
-    icon: <Users className="h-8 w-8 text-brand-purple" />,
+    icon: <Users className="h-8 w-8 text-[#005558]" />,
     title: "Works for Any Class Size",
     description: "Scale effortlessly from small groups to large classes without compromising on assessment quality or feedback depth.",
     demo: "scaling-demo"
@@ -53,6 +54,7 @@ const FeaturesSection = () => {
   const [demoResult, setDemoResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleLearnMore = (index: number) => {
     setExpandedFeature(expandedFeature === index ? null : index);
@@ -118,6 +120,22 @@ const FeaturesSection = () => {
     }, 1500);
   };
 
+  const handleViewFeature = (demoType: string) => {
+    switch (demoType) {
+      case "ai-demo":
+        navigate('/upload');
+        break;
+      case "feedback-demo":
+        navigate('/for-students');
+        break;
+      case "analytics-demo":
+        navigate('/dashboard');
+        break;
+      default:
+        navigate('/how-it-works');
+    }
+  };
+
   const getDemoContent = () => {
     switch (activeDemoType) {
       case "ai-demo":
@@ -138,7 +156,7 @@ const FeaturesSection = () => {
                     value={demoInput}
                     onChange={(e) => setDemoInput(e.target.value)}
                   />
-                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full">
+                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full bg-[#005558] hover:bg-[#005558]/90">
                     {isLoading ? (
                       <>
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2"></div>
@@ -155,7 +173,7 @@ const FeaturesSection = () => {
                   </div>
                   <div className="flex justify-end">
                     <Button variant="outline" onClick={() => setDemoResult(null)} className="mr-2">Try Again</Button>
-                    <Button onClick={() => setDemoOpen(false)}>Close Demo</Button>
+                    <Button onClick={() => setDemoOpen(false)} className="bg-[#005558] hover:bg-[#005558]/90">Close Demo</Button>
                   </div>
                 </div>
               )}
@@ -181,7 +199,7 @@ const FeaturesSection = () => {
                     value={demoInput}
                     onChange={(e) => setDemoInput(e.target.value)}
                   />
-                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full">
+                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full bg-[#005558] hover:bg-[#005558]/90">
                     {isLoading ? (
                       <>
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2"></div>
@@ -212,7 +230,7 @@ const FeaturesSection = () => {
                   
                   <div className="flex justify-end">
                     <Button variant="outline" onClick={() => setDemoResult(null)} className="mr-2">Try Again</Button>
-                    <Button onClick={() => setDemoOpen(false)}>Close Demo</Button>
+                    <Button onClick={() => setDemoOpen(false)} className="bg-[#005558] hover:bg-[#005558]/90">Close Demo</Button>
                   </div>
                 </div>
               )}
@@ -238,7 +256,7 @@ const FeaturesSection = () => {
                     value={demoInput}
                     onChange={(e) => setDemoInput(e.target.value)}
                   />
-                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full">
+                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full bg-[#005558] hover:bg-[#005558]/90">
                     {isLoading ? (
                       <>
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2"></div>
@@ -260,7 +278,7 @@ const FeaturesSection = () => {
                         <div 
                           className={`h-full ${
                             competency.score >= 90 ? 'bg-green-500' : 
-                            competency.score >= 80 ? 'bg-blue-500' : 
+                            competency.score >= 80 ? 'bg-[#005558]' : 
                             competency.score >= 70 ? 'bg-amber-500' : 'bg-red-500'
                           }`}
                           style={{width: `${competency.score}%`}}
@@ -270,7 +288,7 @@ const FeaturesSection = () => {
                   ))}
                   <div className="flex justify-end">
                     <Button variant="outline" onClick={() => setDemoResult(null)} className="mr-2">Try Again</Button>
-                    <Button onClick={() => setDemoOpen(false)}>Close Demo</Button>
+                    <Button onClick={() => setDemoOpen(false)} className="bg-[#005558] hover:bg-[#005558]/90">Close Demo</Button>
                   </div>
                 </div>
               )}
@@ -296,7 +314,7 @@ const FeaturesSection = () => {
                     value={demoInput}
                     onChange={(e) => setDemoInput(e.target.value)}
                   />
-                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full">
+                  <Button onClick={handleDemoSubmit} disabled={isLoading} className="w-full bg-[#005558] hover:bg-[#005558]/90">
                     {isLoading ? (
                       <>
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2"></div>
@@ -312,7 +330,7 @@ const FeaturesSection = () => {
                   </div>
                   <div className="flex justify-end">
                     <Button variant="outline" onClick={() => setDemoResult(null)} className="mr-2">Try Again</Button>
-                    <Button onClick={() => setDemoOpen(false)}>Close Demo</Button>
+                    <Button onClick={() => setDemoOpen(false)} className="bg-[#005558] hover:bg-[#005558]/90">Close Demo</Button>
                   </div>
                 </div>
               )}
@@ -322,31 +340,9 @@ const FeaturesSection = () => {
     }
   };
 
-  const handleOpenGoogleClassroom = () => {
-    window.location.href = '/google-classroom';
-  };
-
   return (
     <section id="features" className="py-16 md:py-24 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Powerful Features for Modern Educators
-          </h2>
-          <p className="text-lg text-muted-foreground">
-            EduGrade combines cutting-edge AI with pedagogical expertise to transform the assessment experience for teachers and students alike.
-          </p>
-          <div className="mt-6">
-            <Button 
-              onClick={handleOpenGoogleClassroom} 
-              className="bg-brand-blue hover:bg-brand-blue/90"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Connect to Google Classroom
-            </Button>
-          </div>
-        </div>
-        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <div 
@@ -366,19 +362,30 @@ const FeaturesSection = () => {
                     This feature uses advanced algorithms to analyze student work against 
                     rubrics and learning objectives, providing consistent and accurate assessments.
                   </p>
-                  <Button 
-                    onClick={() => handleFeatureDemo(feature.title, feature.demo)}
-                    className="text-sm font-medium text-white bg-brand-blue hover:bg-brand-blue/90"
-                    size="sm"
-                  >
-                    Try Demo
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => handleFeatureDemo(feature.title, feature.demo)}
+                      className="text-sm font-medium text-white bg-[#005558] hover:bg-[#005558]/90"
+                      size="sm"
+                    >
+                      Try Demo
+                    </Button>
+                    <Button 
+                      onClick={() => handleViewFeature(feature.demo)}
+                      className="text-sm font-medium"
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Eye className="mr-1 h-3 w-3" />
+                      View Feature
+                    </Button>
+                  </div>
                 </div>
               )}
               
               <button 
                 onClick={() => handleLearnMore(index)} 
-                className="mt-2 text-sm font-medium text-brand-purple hover:text-brand-purple/80"
+                className="mt-2 text-sm font-medium text-[#005558] hover:text-[#005558]/80"
               >
                 {expandedFeature === index ? 'Show Less' : 'Learn More'}
               </button>

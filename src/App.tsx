@@ -10,6 +10,15 @@ import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import GoogleClassroom from "./pages/GoogleClassroom";
 import NotFound from "./pages/NotFound";
+import Features from "./pages/Features";
+import HowItWorks from "./pages/HowItWorks";
+import UploadAssignments from "./pages/UploadAssignments";
+import ForTeachers from "./pages/ForTeachers";
+import ForStudents from "./pages/ForStudents";
+import Dashboard from "./pages/Dashboard";
+
+// Add custom keyframes for animations we need
+import "./animations.css";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +34,12 @@ const App = () => (
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/google-classroom" element={<GoogleClassroom />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/upload" element={<UploadAssignments />} />
+          <Route path="/for-teachers" element={<ForTeachers />} />
+          <Route path="/for-students" element={<ForStudents />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
