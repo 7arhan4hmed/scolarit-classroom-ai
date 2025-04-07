@@ -36,21 +36,21 @@ const integrations = [
     name: 'Canvas',
     description: 'Integrate with Canvas LMS to sync your courses and assignments.',
     icon: '/canvas-icon.png',
-    active: false,
+    active: true,
     connectAction: 'connect-canvas'
   },
   {
     name: 'Moodle',
     description: 'Connect with Moodle to streamline your grading workflow.',
     icon: '/moodle-icon.png',
-    active: false,
+    active: true,
     connectAction: 'connect-moodle'
   },
   {
     name: 'Blackboard',
-    description: 'Coming soon: integrate SCOLARIT with Blackboard Learn.',
+    description: 'Integrate SCOLARIT with Blackboard Learn for seamless grading.',
     icon: '/blackboard-icon.png',
-    active: false,
+    active: true,
     connectAction: 'connect-blackboard'
   }
 ];
@@ -64,16 +64,9 @@ const HowItWorksSection = () => {
   const [result, setResult] = useState<{ grade: string; feedback: string } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   const handleConnect = (integration: typeof integrations[0]) => {
-    if (!integration.active) {
-      toast({
-        title: "Coming Soon",
-        description: `${integration.name} integration is coming soon. Stay tuned!`,
-      });
-      return;
-    }
-
     setConnectingTo(integration.name);
     
     if (integration.name === 'Google Classroom') {
@@ -95,6 +88,14 @@ const HowItWorksSection = () => {
         title: "Connected Successfully",
         description: `Your ${integration.name} account is now connected to SCOLARIT.`,
       });
+      
+      if (integration.name === 'Canvas') {
+        navigate('/canvas');
+      } else if (integration.name === 'Moodle') {
+        navigate('/moodle');
+      } else if (integration.name === 'Blackboard') {
+        navigate('/blackboard');
+      }
     }, 1500);
   };
 
@@ -149,6 +150,19 @@ const HowItWorksSection = () => {
       navigate('/dashboard');
     }, 1000);
   };
+  
+  const handleScheduleDemo = () => {
+    setShowDemoModal(true);
+    toast({
+      title: "Demo Requested",
+      description: "Thank you for your interest! A team member will contact you shortly to schedule your personalized demo.",
+    });
+    
+    // Close modal after a delay
+    setTimeout(() => {
+      setShowDemoModal(false);
+    }, 3000);
+  };
 
   const isConnected = (name: string) => connectedServices.includes(name);
   
@@ -169,7 +183,7 @@ const HowItWorksSection = () => {
             >
               <div className={`w-16 h-16 rounded-full flex items-center justify-center z-10 mb-6 transition-colors ${
                 index === activeStep ? 
-                  (index === 0 ? "bg-[#005558]" : index === 1 ? "bg-[#005558]" : "bg-[#005558]") : 
+                  "blue-purple-gradient" : 
                   "bg-gray-300"
               }`}>
                 {step.icon}
@@ -196,7 +210,7 @@ const HowItWorksSection = () => {
               <div className="flex justify-center">
                 <Button 
                   onClick={handleAssignmentSubmit}
-                  className="bg-[#005558] hover:bg-[#005558]/90"
+                  className="blue-purple-gradient hover:opacity-90"
                 >
                   Submit for Analysis
                 </Button>
@@ -206,14 +220,14 @@ const HowItWorksSection = () => {
           
           {activeStep === 1 && (
             <div className="animate-fade-in text-center">
-              <Sparkles className="h-16 w-16 text-[#005558] mx-auto mb-4" />
+              <Sparkles className="h-16 w-16 text-blue-600 mx-auto mb-4" />
               <h4 className="text-lg font-medium mb-2">AI is analyzing the submission...</h4>
               <p className="text-muted-foreground mb-6">
                 Our AI is evaluating the response against standard rubrics and looking for key concepts.
               </p>
               <div className="flex justify-center">
                 <div className="h-2 w-64 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#005558] animate-pulse rounded-full" style={{width: isProcessing ? '100%' : '0%', transition: 'width 2s ease-in-out'}}></div>
+                  <div className="h-full blue-purple-gradient animate-pulse rounded-full" style={{width: isProcessing ? '100%' : '0%', transition: 'width 2s ease-in-out'}}></div>
                 </div>
               </div>
             </div>
@@ -224,7 +238,7 @@ const HowItWorksSection = () => {
               <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="col-span-1 bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-2 text-center">Grade</h4>
-                  <div className="text-4xl font-bold text-[#005558] text-center">{result.grade}</div>
+                  <div className="text-4xl font-bold text-blue-600 text-center">{result.grade}</div>
                 </div>
                 <div className="col-span-2 bg-gray-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-2">Feedback</h4>
@@ -246,7 +260,7 @@ const HowItWorksSection = () => {
                   Edit Feedback
                 </Button>
                 <Button 
-                  className="bg-[#005558] hover:bg-[#005558]/90"
+                  className="blue-purple-gradient hover:opacity-90"
                   onClick={handleApprove}
                 >
                   Approve & Send
@@ -256,7 +270,7 @@ const HowItWorksSection = () => {
           )}
         </div>
         
-        <div className="bg-white rounded-xl border shadow-sm p-8 max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl border shadow-sm p-8 max-w-4xl mx-auto mb-16">
           <h3 className="text-2xl font-semibold mb-6 text-center">Seamlessly Integrates With Your Workflow</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -290,8 +304,8 @@ const HowItWorksSection = () => {
                 <Button 
                   onClick={() => handleConnect(integration)}
                   variant={isConnected(integration.name) ? "outline" : "default"}
-                  className={`w-full ${isConnected(integration.name) ? 'border-green-200 text-green-700 hover:bg-green-50' : 'bg-[#005558] hover:bg-[#005558]/90'}`}
-                  disabled={connectingTo !== null || (!integration.active && !isConnected(integration.name))}
+                  className={`w-full ${isConnected(integration.name) ? 'border-green-200 text-green-700 hover:bg-green-50' : 'blue-purple-gradient hover:opacity-90'}`}
+                  disabled={connectingTo !== null}
                 >
                   {connectingTo === integration.name ? (
                     <>
@@ -304,14 +318,36 @@ const HowItWorksSection = () => {
                       Manage Connection
                     </>
                   ) : (
-                    <>
-                      {integration.active ? 'Connect' : 'Coming Soon'}
-                    </>
+                    'Connect'
                   )}
                 </Button>
               </div>
             ))}
           </div>
+          
+          {/* Demo Request Button */}
+          <div className="mt-8 flex justify-center">
+            <Button 
+              onClick={handleScheduleDemo}
+              size="lg"
+              className="blue-purple-gradient hover:opacity-90"
+            >
+              Schedule a Personalized Demo
+            </Button>
+          </div>
+          
+          {/* Demo Modal */}
+          {showDemoModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-8 rounded-lg max-w-md w-full">
+                <h3 className="text-xl font-bold mb-4">Demo Request Received</h3>
+                <p className="mb-6">Thank you for your interest in SCOLARIT! Our team will contact you shortly to schedule your personalized demo.</p>
+                <div className="flex justify-end">
+                  <Button onClick={() => setShowDemoModal(false)}>Close</Button>
+                </div>
+              </div>
+            </div>
+          )}
           
           {isConnected('Google Classroom') && (
             <div className="mt-8 p-5 bg-green-50 border border-green-200 rounded-lg">

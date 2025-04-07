@@ -1,10 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const CtaSection = () => {
+  const [showDemoModal, setShowDemoModal] = useState(false);
+  const { toast } = useToast();
+
+  const handleScheduleDemo = () => {
+    setShowDemoModal(true);
+    toast({
+      title: "Demo Requested",
+      description: "Thank you for your interest! A team member will contact you shortly to schedule your personalized demo.",
+    });
+    
+    // Close modal after a delay
+    setTimeout(() => {
+      setShowDemoModal(false);
+    }, 3000);
+  };
+
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4">
@@ -27,10 +44,13 @@ const CtaSection = () => {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20" asChild>
-                <Link to="/how-it-works">
-                  Schedule a Demo
-                </Link>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-white text-white hover:bg-white/20"
+                onClick={handleScheduleDemo}
+              >
+                Schedule a Demo
               </Button>
             </div>
             <p className="mt-6 text-sm text-white/80">
@@ -39,6 +59,19 @@ const CtaSection = () => {
           </div>
         </div>
       </div>
+      
+      {/* Demo Modal */}
+      {showDemoModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">Demo Request Received</h3>
+            <p className="mb-6">Thank you for your interest in SCOLARIT! Our team will contact you shortly to schedule your personalized demo.</p>
+            <div className="flex justify-end">
+              <Button onClick={() => setShowDemoModal(false)} className="blue-purple-gradient hover:opacity-90">Close</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

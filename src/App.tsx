@@ -16,6 +16,9 @@ import UploadAssignments from "./pages/UploadAssignments";
 import ForTeachers from "./pages/ForTeachers";
 import ForStudents from "./pages/ForStudents";
 import Dashboard from "./pages/Dashboard";
+import Canvas from "./pages/Canvas";
+import Moodle from "./pages/Moodle";
+import Blackboard from "./pages/Blackboard";
 
 // Add custom keyframes for animations we need
 import "./animations.css";
@@ -34,6 +37,9 @@ const App = () => (
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/google-classroom" element={<GoogleClassroom />} />
+          <Route path="/canvas" element={<Canvas />} />
+          <Route path="/moodle" element={<Moodle />} />
+          <Route path="/blackboard" element={<Blackboard />} />
           <Route path="/features" element={<Features />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/upload" element={<UploadAssignments />} />
