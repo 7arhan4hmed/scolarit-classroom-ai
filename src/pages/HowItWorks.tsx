@@ -11,7 +11,7 @@ const HowItWorks = () => {
       <main className="flex-grow">
         <div className="py-12 md:py-16 bg-white">
           <div className="container mx-auto px-4">
-            <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center text-[#005558]">
+            <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center gradient-text">
               How SCOLARIT Works
             </h1>
           </div>

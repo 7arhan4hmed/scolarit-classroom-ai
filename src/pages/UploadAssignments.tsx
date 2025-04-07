@@ -81,7 +81,7 @@ const UploadAssignments = () => {
       <Header />
       <main className="flex-grow py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center text-[#005558]">
+          <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center gradient-text">
             Upload Assignments
           </h1>
           
@@ -89,7 +89,7 @@ const UploadAssignments = () => {
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-2">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step === 'upload' ? 'bg-[#005558] text-white' : 'bg-gray-200'
+                  step === 'upload' ? 'blue-purple-gradient text-white' : 'bg-gray-200'
                 }`}>
                   <Upload size={20} />
                 </div>
@@ -100,7 +100,7 @@ const UploadAssignments = () => {
               
               <div className="flex items-center gap-2">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step === 'assessment' ? 'bg-[#005558] text-white' : 'bg-gray-200'
+                  step === 'assessment' ? 'blue-purple-gradient text-white' : 'bg-gray-200'
                 }`}>
                   <Sparkles size={20} />
                 </div>
@@ -111,7 +111,7 @@ const UploadAssignments = () => {
               
               <div className="flex items-center gap-2">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step === 'review' ? 'bg-[#005558] text-white' : 'bg-gray-200'
+                  step === 'review' ? 'blue-purple-gradient text-white' : 'bg-gray-200'
                 }`}>
                   <CheckCheck size={20} />
                 </div>
@@ -139,7 +139,7 @@ const UploadAssignments = () => {
                         <div className="border-2 border-dashed rounded-lg p-12 text-center">
                           <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                           <Label htmlFor="file-upload" className="cursor-pointer">
-                            <div className="mb-2 text-[#005558] font-medium">Click to upload</div>
+                            <div className="mb-2 text-brand-blue font-medium">Click to upload</div>
                             <p className="text-sm text-gray-500">
                               Supported formats: .doc, .docx, .pdf, .txt
                             </p>
@@ -179,7 +179,7 @@ const UploadAssignments = () => {
                   <CardFooter>
                     <Button 
                       onClick={handleSubmit} 
-                      className="w-full bg-[#005558] hover:bg-[#005558]/90"
+                      className="w-full blue-purple-gradient hover:opacity-90"
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       Submit for Assessment
@@ -197,13 +197,13 @@ const UploadAssignments = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center py-12">
-                    <Sparkles className="h-16 w-16 text-[#005558] animate-pulse mb-4" />
+                    <Sparkles className="h-16 w-16 text-brand-purple animate-pulse mb-4" />
                     <p className="text-center text-lg font-medium mb-2">Processing...</p>
                     <p className="text-center text-gray-500 mb-6">
                       This will take just a moment
                     </p>
                     <div className="w-full max-w-md h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#005558] rounded-full animate-progress"></div>
+                      <div className="h-full blue-purple-gradient rounded-full animate-progress"></div>
                     </div>
                   </CardContent>
                 </>
@@ -221,7 +221,7 @@ const UploadAssignments = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="bg-gray-50 p-4 rounded-lg text-center">
                         <h3 className="text-sm font-medium text-gray-500 mb-1">Grade</h3>
-                        <p className="text-4xl font-bold text-[#005558]">{assessment.grade}</p>
+                        <p className="text-4xl font-bold gradient-text">{assessment.grade}</p>
                       </div>
                       <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
                         <h3 className="text-sm font-medium text-gray-500 mb-2">Feedback</h3>
@@ -239,7 +239,7 @@ const UploadAssignments = () => {
                     </Button>
                     <Button 
                       onClick={handleApprove} 
-                      className="w-full md:w-auto bg-[#005558] hover:bg-[#005558]/90"
+                      className="w-full md:w-auto blue-purple-gradient hover:opacity-90"
                     >
                       Approve & Save
                     </Button>

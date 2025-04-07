@@ -21,27 +21,27 @@ const Header = () => {
     <header className="border-b sticky top-0 bg-white z-50">
       <div className="container mx-auto flex items-center justify-between py-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="rounded-lg bg-[#005558] p-1.5 text-white">
+          <div className="rounded-lg blue-purple-gradient p-1.5 text-white">
             <BookOpen size={24} />
           </div>
-          <span className="text-xl font-bold font-display text-[#005558]">SCOLARIT</span>
+          <span className="text-xl font-bold font-display gradient-text">SCOLARIT</span>
         </Link>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className={`text-sm font-medium ${location.pathname === '/' ? 'text-[#005558]' : 'hover:text-[#005558]'} transition-colors flex items-center gap-1`}>
+          <Link to="/" className={`text-sm font-medium ${location.pathname === '/' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
             <Home className="h-4 w-4" />
             <span>Home</span>
           </Link>
-          <Link to="/features" className={`text-sm font-medium ${location.pathname === '/features' ? 'text-[#005558]' : 'hover:text-[#005558]'} transition-colors flex items-center gap-1`}>
+          <Link to="/features" className={`text-sm font-medium ${location.pathname === '/features' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
             <Sparkles className="h-4 w-4" />
             <span>Features</span>
           </Link>
-          <Link to="/how-it-works" className={`text-sm font-medium ${location.pathname === '/how-it-works' ? 'text-[#005558]' : 'hover:text-[#005558]'} transition-colors flex items-center gap-1`}>
+          <Link to="/how-it-works" className={`text-sm font-medium ${location.pathname === '/how-it-works' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
             <Book className="h-4 w-4" />
             <span>How It Works</span>
           </Link>
-          <Link to="/upload" className={`text-sm font-medium ${location.pathname === '/upload' ? 'text-[#005558]' : 'hover:text-[#005558]'} transition-colors flex items-center gap-1`}>
+          <Link to="/upload" className={`text-sm font-medium ${location.pathname === '/upload' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
             <Upload className="h-4 w-4" />
             <span>Upload Assignments</span>
           </Link>
@@ -58,7 +58,7 @@ const Header = () => {
                     <li className="row-span-3">
                       <NavigationMenuLink asChild>
                         <Link
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-[#005558]/50 to-[#005558] p-6 no-underline outline-none focus:shadow-md"
+                          className="flex h-full w-full select-none flex-col justify-end rounded-md blue-purple-gradient p-6 no-underline outline-none focus:shadow-md"
                           to="/google-classroom"
                         >
                           <div className="mb-2 mt-4 text-lg font-medium text-white">
@@ -117,13 +117,13 @@ const Header = () => {
         
         {/* Login/Signup Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="outline" asChild>
+          <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
             <Link to="/login">
               <UserCheck className="mr-2 h-4 w-4" />
               Log in
             </Link>
           </Button>
-          <Button className="bg-[#005558] hover:bg-[#005558]/90" asChild>
+          <Button className="blue-purple-gradient hover:opacity-90" asChild>
             <Link to="/signup">
               Try for free
             </Link>
@@ -195,12 +195,12 @@ const Header = () => {
               </Link>
             </div>
             <div className="flex flex-col gap-2 pt-2 border-t">
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
                   Log in
                 </Link>
               </Button>
-              <Button className="bg-[#005558] hover:bg-[#005558]/90" asChild>
+              <Button className="blue-purple-gradient hover:opacity-90" asChild>
                 <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
                   Try for free
                 </Link>

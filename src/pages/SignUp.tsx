@@ -85,11 +85,11 @@ const SignUp = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="rounded-lg bg-[#005558] p-2 text-white">
+            <div className="rounded-lg blue-purple-gradient p-2 text-white">
               <BookOpen size={28} />
             </div>
           </div>
-          <h2 className="mt-6 text-3xl font-bold font-display text-gray-900">Create your account</h2>
+          <h2 className="mt-6 text-3xl font-bold font-display gradient-text">Create your account</h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign up to start using SCOLARIT
           </p>
@@ -205,7 +205,7 @@ const SignUp = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-[#005558] hover:bg-[#005558]/90"
+              className="w-full blue-purple-gradient hover:opacity-90"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -221,7 +221,7 @@ const SignUp = () => {
             <div className="flex items-center justify-center">
               <div className="text-center text-sm">
                 <span className="text-gray-600">Already have an account?</span>{" "}
-                <Link to="/login" className="font-medium text-[#005558] hover:text-[#005558]/80">
+                <Link to="/login" className="font-medium text-brand-blue hover:text-brand-blue/80">
                   Log in
                 </Link>
               </div>

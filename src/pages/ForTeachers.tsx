@@ -47,7 +47,7 @@ const ForTeachers = () => {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center mb-12">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-[#005558]">SCOLARIT for Teachers</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">SCOLARIT for Teachers</h1>
               <p className="text-lg text-gray-600">
                 Revolutionize your assessment workflow and reclaim your valuable time.
               </p>
@@ -56,7 +56,7 @@ const ForTeachers = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {TeacherFeatures.map((feature, index) => (
                 <div key={index} className="bg-white rounded-xl border p-6 shadow-sm">
-                  <div className="w-12 h-12 bg-[#005558] rounded-full flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 blue-purple-gradient rounded-full flex items-center justify-center mb-4">
                     {feature.icon}
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
@@ -66,12 +66,12 @@ const ForTeachers = () => {
             </div>
             
             <div className="bg-gray-50 rounded-2xl p-8 max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold mb-6 text-center text-[#005558]">Ready to transform your teaching?</h2>
+              <h2 className="text-2xl font-bold mb-6 text-center gradient-text">Ready to transform your teaching?</h2>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" className="bg-[#005558] hover:bg-[#005558]/90">
+                <Button asChild size="lg" className="bg-brand-blue hover:bg-brand-blue/90 text-white">
                   <Link to="/signup">Start Free Trial</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline">
+                <Button asChild size="lg" variant="outline" className="text-brand-purple border-brand-purple hover:bg-brand-purple/10">
                   <Link to="/how-it-works">See How It Works</Link>
                 </Button>
               </div>
@@ -82,7 +82,7 @@ const ForTeachers = () => {
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
-              <h2 className="text-2xl font-bold mb-6 text-center">Frequently Asked Questions</h2>
+              <h2 className="text-2xl font-bold mb-6 text-center gradient-text">Frequently Asked Questions</h2>
               
               <div className="space-y-4">
                 <div className="bg-white p-6 rounded-lg shadow-sm">
