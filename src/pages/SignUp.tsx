@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -46,22 +45,18 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
-      // This is a mock signup implementation
-      // In a real app, you would call an authentication service
       console.log(`${userType.charAt(0).toUpperCase() + userType.slice(1)} sign up attempt with:`, values);
       
-      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock successful signup
-      localStorage.setItem('user', JSON.stringify({ name: values.name, email: values.email, type: userType }));
+      localStorage.setItem('user', JSON.stringify({ name: values.name, email: values.email, type: userType, profileComplete: false }));
       
       toast({
         title: "Account created",
-        description: `Welcome to SCOLARIT, ${userType === 'teacher' ? 'Teacher' : 'Student'}!`,
+        description: `Welcome to SCOLARIT, ${values.name}! Let's set up your profile.`,
       });
       
-      navigate('/dashboard');
+      navigate(`/profile-setup?type=${userType}`);
     } catch (error) {
       console.error('Sign up error:', error);
       toast({

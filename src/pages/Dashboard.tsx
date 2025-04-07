@@ -1,16 +1,15 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, FileText, Upload, Search, Plus, Filter, ArrowUpRight, Eye } from 'lucide-react';
+import { BarChart, FileText, Upload, Search, Plus, Filter, ArrowUpRight, Eye, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Mock data
 const recentAssignments = [
   {
     id: 1,
@@ -47,7 +46,15 @@ const classes = [
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const handleViewDetails = (id: number) => {
     toast({
@@ -64,7 +71,7 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-[#005558]">Dashboard</h1>
-              <p className="text-gray-500">Welcome to your SCOLARIT dashboard</p>
+              <p className="text-gray-500">Welcome{user?.name ? `, ${user.name}` : ''} to your SCOLARIT dashboard</p>
             </div>
             
             <div className="flex items-center gap-3 mt-4 md:mt-0">
@@ -81,6 +88,23 @@ const Dashboard = () => {
               </Button>
             </div>
           </div>
+          
+          {user && user.profileComplete === false && (
+            <Alert className="mb-6 border-yellow-500 bg-yellow-50">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <AlertTitle className="text-yellow-700">Complete your profile</AlertTitle>
+              <AlertDescription className="text-yellow-600">
+                Your profile is incomplete. Complete your profile to unlock all features.
+                <div className="mt-2">
+                  <Button asChild variant="outline" size="sm" className="border-yellow-500 text-yellow-700 hover:bg-yellow-100">
+                    <Link to={`/profile-setup?type=${user.type}`}>
+                      Complete Profile
+                    </Link>
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
           
           <Tabs defaultValue="overview" className="space-y-6" onValueChange={setActiveTab}>
             <TabsList>
