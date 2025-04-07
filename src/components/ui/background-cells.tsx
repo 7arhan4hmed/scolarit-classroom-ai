@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
+import { motion, useAnimation } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 interface BackgroundCellsProps {
   children?: React.ReactNode;
@@ -10,10 +10,10 @@ interface BackgroundCellsProps {
 
 export const BackgroundCells = ({ children, className }: BackgroundCellsProps) => {
   return (
-    <div className={cn("relative h-screen flex justify-center overflow-hidden", className)}>
+    <div className={cn("relative h-[400px] flex justify-center overflow-hidden", className)}>
       <BackgroundCellCore />
       {children && (
-        <div className="relative z-50 mt-40 pointer-events-none select-none">
+        <div className="relative z-50 mt-20 pointer-events-none select-none">
           {children}
         </div>
       )}
@@ -61,7 +61,7 @@ const BackgroundCellCore = () => {
         >
           <Pattern cellClassName="border-blue-600 relative z-[100]" />
         </div>
-        <Pattern className="opacity-[0.5]" cellClassName="border-neutral-700" />
+        <Pattern className="opacity-[0.5]" cellClassName="border-purple-500" />
       </div>
     </div>
   );
@@ -86,7 +86,7 @@ const Pattern = ({ className, cellClassName }: PatternProps) => {
           className="flex flex-col relative z-20 border-b"
         >
           {row.map((column, colIdx) => {
-            const controls = useMotionValue(0);
+            const controls = useAnimation();
 
             useEffect(() => {
               if (clickedCell) {
@@ -94,18 +94,10 @@ const Pattern = ({ className, cellClassName }: PatternProps) => {
                   Math.pow(clickedCell[0] - rowIdx, 2) +
                     Math.pow(clickedCell[1] - colIdx, 2)
                 );
-                
-                // Simulate animation control with CSS transitions
-                const element = document.getElementById(`cell-${rowIdx}-${colIdx}`);
-                if (element) {
-                  element.style.opacity = '0';
-                  setTimeout(() => {
-                    element.style.opacity = `${1 - distance * 0.1}`;
-                    setTimeout(() => {
-                      element.style.opacity = '0';
-                    }, distance * 200);
-                  }, 0);
-                }
+                controls.start({
+                  opacity: [0, 1 - distance * 0.1, 0],
+                  transition: { duration: distance * 0.2 },
+                });
               }
             }, [clickedCell]);
 
@@ -129,8 +121,8 @@ const Pattern = ({ className, cellClassName }: PatternProps) => {
                     duration: 0.5,
                     ease: "backOut",
                   }}
-                  id={`cell-${rowIdx}-${colIdx}`}
-                  className="bg-[rgba(14,165,233,0.3)] h-12 w-12 transition-opacity duration-500"
+                  animate={controls}
+                  className="bg-[rgba(37,99,235,0.3)] h-12 w-12"
                 />
               </div>
             );
@@ -141,20 +133,12 @@ const Pattern = ({ className, cellClassName }: PatternProps) => {
   );
 };
 
-// Custom hook to replace useAnimation
-function useMotionValue(initialValue: number) {
-  const [value, setValue] = useState(initialValue);
-  
-  return value;
-}
-
-// Demo component for background cells
 export const BackgroundCellsDemo = () => {
   return (
-    <BackgroundCells className="bg-slate-950 h-[500px]">
-      <h1 className="md:text-2xl lg:text-7xl font-medium text-center bg-clip-text text-transparent bg-gradient-to-b from-neutral-100 to-neutral-400 pointer-events-none">
-        AI-Powered Education <br />
-        for the Future
+    <BackgroundCells className="bg-slate-950">
+      <h1 className="md:text-2xl lg:text-4xl font-medium text-center bg-clip-text text-transparent bg-gradient-to-b from-blue-500 to-purple-500 pointer-events-auto">
+        SCOLARIT AI Technology <br />
+        Powering the Future of Education
       </h1>
     </BackgroundCells>
   );
