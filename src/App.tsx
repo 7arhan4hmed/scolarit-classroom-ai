@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import Canvas from "./pages/Canvas";
 import Moodle from "./pages/Moodle";
 import Blackboard from "./pages/Blackboard";
+import Contact from "./pages/Contact";
 
 // Add custom keyframes for animations we need
 import "./animations.css";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/for-teachers" element={<ForTeachers />} />
           <Route path="/for-students" element={<ForStudents />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/contact" element={<Contact />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

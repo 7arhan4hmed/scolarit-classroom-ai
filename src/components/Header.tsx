@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck } from 'lucide-react';
+import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   NavigationMenu,
@@ -44,6 +44,10 @@ const Header = () => {
           <Link to="/upload" className={`text-sm font-medium ${location.pathname === '/upload' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
             <Upload className="h-4 w-4" />
             <span>Upload Assignments</span>
+          </Link>
+          <Link to="/contact" className={`text-sm font-medium ${location.pathname === '/contact' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+            <MessageSquare className="h-4 w-4" />
+            <span>Contact</span>
           </Link>
           
           <NavigationMenu>
@@ -166,6 +170,14 @@ const Header = () => {
             >
               <Upload className="h-4 w-4" />
               <span>Upload Assignments</span>
+            </Link>
+            <Link 
+              to="/contact" 
+              className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Contact</span>
             </Link>
             <div className="border-t pt-2">
               <p className="px-2 text-sm font-medium text-gray-500">For Educators</p>

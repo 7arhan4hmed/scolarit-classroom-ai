@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
 import CtaSection from '@/components/CtaSection';
+import FaqSection from '@/components/FaqSection';
 
 const Index = () => {
   return (
@@ -12,6 +13,7 @@ const Index = () => {
       <main className="flex-grow">
         <HeroSection />
         <CtaSection />
+        <FaqSection />
       </main>
       <Footer />
     </div>
