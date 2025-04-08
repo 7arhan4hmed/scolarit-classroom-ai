@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -11,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BookOpen, LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -24,7 +24,10 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  const from = new URLSearchParams(location.search).get('from') || '/dashboard';
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -38,28 +41,25 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // This is a mock login implementation
-      // In a real app, you would call an authentication service
-      console.log(`${userType.charAt(0).toUpperCase() + userType.slice(1)} login attempt with:`, values);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password
+      });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login
-      localStorage.setItem('user', JSON.stringify({ email: values.email, type: userType }));
+      if (error) throw error;
       
       toast({
         title: "Login successful",
         description: `Welcome back to SCOLARIT, ${userType === 'teacher' ? 'Teacher' : 'Student'}!`,
       });
       
-      navigate('/dashboard');
-    } catch (error) {
+      navigate(from);
+    } catch (error: any) {
       console.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error.message || "Please check your credentials and try again.",
       });
     } finally {
       setIsLoading(false);

@@ -1,8 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare, LogOut } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -12,10 +11,49 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    checkUser();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Signed out successfully",
+    });
+    navigate('/');
+  };
 
   return (
     <header className="border-b sticky top-0 bg-white z-50">
@@ -27,7 +65,6 @@ const Header = () => {
           <span className="text-xl font-bold font-display gradient-text">SCOLARIT</span>
         </Link>
         
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           <Link to="/" className={`text-sm font-medium ${location.pathname === '/' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
             <Home className="h-4 w-4" />
@@ -107,7 +144,6 @@ const Header = () => {
           </NavigationMenu>
         </nav>
         
-        {/* Mobile Menu Button */}
         <div className="md:hidden">
           <Button 
             variant="ghost" 
@@ -119,23 +155,30 @@ const Header = () => {
           </Button>
         </div>
         
-        {/* Login/Signup Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
-            <Link to="/login">
-              <UserCheck className="mr-2 h-4 w-4" />
-              Log in
-            </Link>
-          </Button>
-          <Button className="blue-purple-gradient hover:opacity-90" asChild>
-            <Link to="/signup">
-              Try for free
-            </Link>
-          </Button>
+          {user ? (
+            <Button variant="outline" className="text-brand-red border-brand-red hover:bg-brand-red/10" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                <Link to={`/login?from=${encodeURIComponent(location.pathname)}`}>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Log in
+                </Link>
+              </Button>
+              <Button className="blue-purple-gradient hover:opacity-90" asChild>
+                <Link to="/signup">
+                  Try for free
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
       
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-lg z-50 animate-fade-in">
           <div className="container py-4 flex flex-col space-y-4">
@@ -207,16 +250,31 @@ const Header = () => {
               </Link>
             </div>
             <div className="flex flex-col gap-2 pt-2 border-t">
-              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                  Log in
-                </Link>
-              </Button>
-              <Button className="blue-purple-gradient hover:opacity-90" asChild>
-                <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
-                  Try for free
-                </Link>
-              </Button>
+              {user ? (
+                <Button variant="outline" className="text-brand-red border-brand-red hover:bg-brand-red/10" onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                    <Link 
+                      to={`/login?from=${encodeURIComponent(location.pathname)}`} 
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Log in
+                    </Link>
+                  </Button>
+                  <Button className="blue-purple-gradient hover:opacity-90" asChild>
+                    <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      Try for free
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
