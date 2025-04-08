@@ -1,107 +1,80 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-
-// Import refactored components
-import StepIndicator from '@/components/assignments/StepIndicator';
-import UploadForm from '@/components/assignments/UploadForm';
-import AssessmentProcessing from '@/components/assignments/AssessmentProcessing';
-import AssessmentReview from '@/components/assignments/AssessmentReview';
-import { useAssignmentSubmission } from '@/hooks/useAssignmentSubmission';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Upload, FileText, Sparkles, CheckCheck } from 'lucide-react';
 
 const UploadAssignments = () => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState<'upload' | 'assessment' | 'review'>('upload');
+  const [file, setFile] = useState<File | null>(null);
+  const [textInput, setTextInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [assessment, setAssessment] = useState<{ grade: string; feedback: string } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  useEffect(() => {
-    // Check if user is logged in
-    const getUser = async () => {
-      setLoading(true);
-      
-      try {
-        // First set up listener for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (event, session) => {
-            if (event === 'SIGNED_IN') {
-              setUser(session?.user || null);
-            } else if (event === 'SIGNED_OUT') {
-              setUser(null);
-              navigate('/login');
-            }
-          }
-        );
-        
-        // Then check current session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          setUser(session.user);
-        } else {
-          toast({
-            title: "Authentication required",
-            description: "Please log in to submit assignments.",
-            variant: "destructive",
-          });
-          navigate('/login');
-        }
-      } catch (error) {
-        console.error("Authentication error:", error);
-        toast({
-          title: "Authentication error",
-          description: "There was a problem checking your login status.",
-          variant: "destructive",
-        });
-        navigate('/login');
-      } finally {
-        setLoading(false);
-      }
-      
-      return () => {
-        // Clean up the subscription when the component unmounts
-        subscription?.unsubscribe();
-      };
-    };
-    
-    getUser();
-  }, [navigate, toast]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
+  };
   
-  const {
-    step,
-    file,
-    setFile,
-    textInput,
-    setTextInput,
-    assessment,
-    assignments,
-    selectedAssignment,
-    setSelectedAssignment,
-    loadingAssignments,
-    handleSubmit,
-    handleApprove,
-    handleReset
-  } = useAssignmentSubmission(user?.id);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow py-12">
-          <div className="container mx-auto px-4 text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
-            <p className="mt-4">Loading...</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextInput(e.target.value);
+  };
+  
+  const handleSubmit = () => {
+    if (!file && !textInput.trim()) {
+      toast({
+        title: "Missing content",
+        description: "Please upload a file or enter text to submit for assessment.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setStep('assessment');
+    
+    // Simulate assessment process
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setStep('review');
+      setAssessment({
+        grade: "B+",
+        feedback: "The assignment demonstrates good understanding of the core concepts. There's a clear thesis statement and supporting evidence. Consider adding more specific examples and improving the transitions between paragraphs for a stronger argument flow. The conclusion effectively summarizes the main points but could be strengthened by connecting back to the broader implications of your thesis."
+      });
+      
+      toast({
+        title: "Assessment complete",
+        description: "Your assignment has been assessed.",
+      });
+    }, 3000);
+  };
+  
+  const handleApprove = () => {
+    toast({
+      title: "Assessment approved",
+      description: "The assessment has been saved to your dashboard.",
+    });
+    navigate('/dashboard');
+  };
+  
+  const handleReset = () => {
+    setFile(null);
+    setTextInput('');
+    setAssessment(null);
+    setStep('upload');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -113,7 +86,38 @@ const UploadAssignments = () => {
           </h1>
           
           <div className="max-w-3xl mx-auto">
-            <StepIndicator currentStep={step} />
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-2">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  step === 'upload' ? 'blue-purple-gradient text-white' : 'bg-gray-200'
+                }`}>
+                  <Upload size={20} />
+                </div>
+                <span className={step === 'upload' ? 'font-medium' : 'text-gray-500'}>Upload</span>
+              </div>
+              
+              <div className="h-0.5 w-10 bg-gray-200"></div>
+              
+              <div className="flex items-center gap-2">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  step === 'assessment' ? 'blue-purple-gradient text-white' : 'bg-gray-200'
+                }`}>
+                  <Sparkles size={20} />
+                </div>
+                <span className={step === 'assessment' ? 'font-medium' : 'text-gray-500'}>Assessment</span>
+              </div>
+              
+              <div className="h-0.5 w-10 bg-gray-200"></div>
+              
+              <div className="flex items-center gap-2">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  step === 'review' ? 'blue-purple-gradient text-white' : 'bg-gray-200'
+                }`}>
+                  <CheckCheck size={20} />
+                </div>
+                <span className={step === 'review' ? 'font-medium' : 'text-gray-500'}>Review</span>
+              </div>
+            </div>
             
             <Card>
               {step === 'upload' && (
@@ -125,18 +129,62 @@ const UploadAssignments = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <UploadForm
-                      assignments={assignments}
-                      loadingAssignments={loadingAssignments}
-                      selectedAssignment={selectedAssignment}
-                      setSelectedAssignment={setSelectedAssignment}
-                      file={file}
-                      setFile={setFile}
-                      textInput={textInput}
-                      setTextInput={setTextInput}
-                      onSubmit={handleSubmit}
-                    />
+                    <Tabs defaultValue="file">
+                      <TabsList className="grid w-full grid-cols-2 mb-6">
+                        <TabsTrigger value="file">Upload File</TabsTrigger>
+                        <TabsTrigger value="text">Enter Text</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="file">
+                        <div className="border-2 border-dashed rounded-lg p-12 text-center">
+                          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <Label htmlFor="file-upload" className="cursor-pointer">
+                            <div className="mb-2 text-brand-blue font-medium">Click to upload</div>
+                            <p className="text-sm text-gray-500">
+                              Supported formats: .doc, .docx, .pdf, .txt
+                            </p>
+                            <Input 
+                              id="file-upload" 
+                              type="file" 
+                              className="hidden" 
+                              accept=".doc,.docx,.pdf,.txt" 
+                              onChange={handleFileChange}
+                            />
+                          </Label>
+                          {file && (
+                            <div className="mt-4 text-sm p-2 bg-gray-50 rounded flex items-center justify-between">
+                              <span>{file.name}</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setFile(null)}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="text">
+                        <Textarea
+                          placeholder="Enter your assignment text here..."
+                          className="min-h-[200px]"
+                          value={textInput}
+                          onChange={handleTextChange}
+                        />
+                      </TabsContent>
+                    </Tabs>
                   </CardContent>
+                  <CardFooter>
+                    <Button 
+                      onClick={handleSubmit} 
+                      className="w-full blue-purple-gradient hover:opacity-90"
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Submit for Assessment
+                    </Button>
+                  </CardFooter>
                 </>
               )}
               
@@ -148,8 +196,15 @@ const UploadAssignments = () => {
                       Our AI is analyzing your submission...
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <AssessmentProcessing />
+                  <CardContent className="flex flex-col items-center py-12">
+                    <Sparkles className="h-16 w-16 text-brand-purple animate-pulse mb-4" />
+                    <p className="text-center text-lg font-medium mb-2">Processing...</p>
+                    <p className="text-center text-gray-500 mb-6">
+                      This will take just a moment
+                    </p>
+                    <div className="w-full max-w-md h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full blue-purple-gradient rounded-full animate-progress"></div>
+                    </div>
                   </CardContent>
                 </>
               )}
@@ -163,12 +218,32 @@ const UploadAssignments = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <AssessmentReview
-                      assessment={assessment}
-                      onApprove={handleApprove}
-                      onReset={handleReset}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-lg text-center">
+                        <h3 className="text-sm font-medium text-gray-500 mb-1">Grade</h3>
+                        <p className="text-4xl font-bold gradient-text">{assessment.grade}</p>
+                      </div>
+                      <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-500 mb-2">Feedback</h3>
+                        <p className="text-sm">{assessment.feedback}</p>
+                      </div>
+                    </div>
                   </CardContent>
+                  <CardFooter className="flex flex-col md:flex-row gap-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleReset}
+                      className="w-full md:w-auto"
+                    >
+                      Start Over
+                    </Button>
+                    <Button 
+                      onClick={handleApprove} 
+                      className="w-full md:w-auto blue-purple-gradient hover:opacity-90"
+                    >
+                      Approve & Save
+                    </Button>
+                  </CardFooter>
                 </>
               )}
             </Card>
