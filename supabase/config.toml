@@ -1,1 +1,5 @@
+
 project_id = "vphzmhbasjhomzqvatvq"
+
+[functions.assess-assignment]
+verify_jwt = true

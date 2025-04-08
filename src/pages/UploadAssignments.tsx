@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -10,7 +10,19 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, FileText, Sparkles, CheckCheck } from 'lucide-react';
+import { Upload, FileText, Sparkles, CheckCheck, Info } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
+type Assignment = {
+  id: string;
+  title: string;
+  description: string;
+  course_id: string;
+  course_name?: string;
+};
 
 const UploadAssignments = () => {
   const [step, setStep] = useState<'upload' | 'assessment' | 'review'>('upload');
@@ -20,6 +32,81 @@ const UploadAssignments = () => {
   const [assessment, setAssessment] = useState<{ grade: string; feedback: string } | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [selectedAssignment, setSelectedAssignment] = useState<string>('');
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Check if user is logged in
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to submit assignments.",
+          variant: "destructive",
+        });
+        navigate('/login');
+        return;
+      }
+      setUser(session.user);
+      fetchAssignments(session.user.id);
+    };
+    
+    getUser();
+  }, [navigate, toast]);
+  
+  const fetchAssignments = async (userId: string) => {
+    setLoadingAssignments(true);
+    try {
+      // Get enrollments for the student
+      const { data: enrollments, error: enrollmentsError } = await supabase
+        .from('enrollments')
+        .select('course_id')
+        .eq('student_id', userId);
+        
+      if (enrollmentsError) throw enrollmentsError;
+      
+      if (!enrollments || enrollments.length === 0) {
+        setLoadingAssignments(false);
+        return;
+      }
+      
+      // Get course IDs the student is enrolled in
+      const courseIds = enrollments.map(enrollment => enrollment.course_id);
+      
+      // Get assignments for these courses
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('assignments')
+        .select(`
+          *,
+          courses:course_id (
+            name
+          )
+        `)
+        .in('course_id', courseIds);
+        
+      if (assignmentsError) throw assignmentsError;
+      
+      const formattedAssignments = assignmentsData.map(assignment => ({
+        ...assignment,
+        course_name: assignment.courses?.name
+      }));
+      
+      setAssignments(formattedAssignments);
+    } catch (error: any) {
+      console.error('Error fetching assignments:', error);
+      toast({
+        title: "Failed to load assignments",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -32,7 +119,16 @@ const UploadAssignments = () => {
     setTextInput(e.target.value);
   };
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!selectedAssignment) {
+      toast({
+        title: "Assignment selection required",
+        description: "Please select an assignment to submit for.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!file && !textInput.trim()) {
       toast({
         title: "Missing content",
@@ -43,30 +139,104 @@ const UploadAssignments = () => {
     }
     
     setIsSubmitting(true);
-    setStep('assessment');
     
-    // Simulate assessment process
-    setTimeout(() => {
+    try {
+      let filePath = null;
+      
+      // If file is uploaded, store it in Supabase Storage
+      if (file) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: storageError } = await supabase.storage
+          .from('assignments')
+          .upload(fileName, file);
+          
+        if (storageError) throw storageError;
+        
+        filePath = fileName;
+      }
+      
+      // Create submission record in database
+      const { data: submission, error: submissionError } = await supabase
+        .from('submissions')
+        .insert([{
+          assignment_id: selectedAssignment,
+          student_id: user.id,
+          content_type: file ? 'file' : 'text',
+          text_content: textInput || null,
+          file_path: filePath,
+        }])
+        .select();
+        
+      if (submissionError) throw submissionError;
+      
+      setSubmissionId(submission[0].id);
+      
+      // Start AI assessment
+      setStep('assessment');
+      
+      const content = file ? `File submission: ${file.name}` : textInput;
+      
+      // Call the OpenAI assessment edge function
+      const { data: aiResponse, error: aiError } = await supabase.functions
+        .invoke('assess-assignment', {
+          body: {
+            submissionId: submission[0].id,
+            contentType: file ? 'file' : 'text',
+            content
+          }
+        });
+        
+      if (aiError) throw aiError;
+      
       setIsSubmitting(false);
       setStep('review');
       setAssessment({
-        grade: "B+",
-        feedback: "The assignment demonstrates good understanding of the core concepts. There's a clear thesis statement and supporting evidence. Consider adding more specific examples and improving the transitions between paragraphs for a stronger argument flow. The conclusion effectively summarizes the main points but could be strengthened by connecting back to the broader implications of your thesis."
+        grade: aiResponse.grade,
+        feedback: aiResponse.feedback
       });
       
       toast({
         title: "Assessment complete",
         description: "Your assignment has been assessed.",
       });
-    }, 3000);
+    } catch (error: any) {
+      console.error('Error submitting assignment:', error);
+      setIsSubmitting(false);
+      toast({
+        title: "Submission failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
   
-  const handleApprove = () => {
-    toast({
-      title: "Assessment approved",
-      description: "The assessment has been saved to your dashboard.",
-    });
-    navigate('/dashboard');
+  const handleApprove = async () => {
+    try {
+      // Update submission status to 'graded'
+      if (submissionId) {
+        const { error } = await supabase
+          .from('submissions')
+          .update({ status: 'graded' })
+          .eq('id', submissionId);
+          
+        if (error) throw error;
+      }
+      
+      toast({
+        title: "Assessment approved",
+        description: "The assessment has been saved to your dashboard.",
+      });
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Error approving assessment:', error);
+      toast({
+        title: "Failed to save assessment",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
   
   const handleReset = () => {
@@ -74,7 +244,27 @@ const UploadAssignments = () => {
     setTextInput('');
     setAssessment(null);
     setStep('upload');
+    setSubmissionId(null);
   };
+
+  useEffect(() => {
+    // Check if Storage bucket exists, if not create it
+    const setupStorageBucket = async () => {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const assignmentsBucketExists = buckets?.some(bucket => bucket.name === 'assignments');
+      
+      if (!assignmentsBucketExists) {
+        await supabase.storage.createBucket('assignments', {
+          public: false,
+          fileSizeLimit: 10485760, // 10MB
+        });
+      }
+    };
+    
+    if (user) {
+      setupStorageBucket();
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -129,57 +319,90 @@ const UploadAssignments = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Tabs defaultValue="file">
-                      <TabsList className="grid w-full grid-cols-2 mb-6">
-                        <TabsTrigger value="file">Upload File</TabsTrigger>
-                        <TabsTrigger value="text">Enter Text</TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="file">
-                        <div className="border-2 border-dashed rounded-lg p-12 text-center">
-                          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <Label htmlFor="file-upload" className="cursor-pointer">
-                            <div className="mb-2 text-brand-blue font-medium">Click to upload</div>
-                            <p className="text-sm text-gray-500">
-                              Supported formats: .doc, .docx, .pdf, .txt
-                            </p>
-                            <Input 
-                              id="file-upload" 
-                              type="file" 
-                              className="hidden" 
-                              accept=".doc,.docx,.pdf,.txt" 
-                              onChange={handleFileChange}
-                            />
-                          </Label>
-                          {file && (
-                            <div className="mt-4 text-sm p-2 bg-gray-50 rounded flex items-center justify-between">
-                              <span>{file.name}</span>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => setFile(null)}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          )}
+                    {assignments.length === 0 && !loadingAssignments ? (
+                      <Alert className="mb-6">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>No assignments available</AlertTitle>
+                        <AlertDescription>
+                          You don't have any active assignments. Please contact your teacher or enroll in a course.
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <>
+                        <div className="mb-6">
+                          <Label htmlFor="assignment-select" className="mb-2 block">Select Assignment</Label>
+                          <Select 
+                            value={selectedAssignment} 
+                            onValueChange={setSelectedAssignment}
+                            disabled={loadingAssignments}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select an assignment" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {assignments.map((assignment) => (
+                                <SelectItem key={assignment.id} value={assignment.id}>
+                                  {assignment.title} {assignment.course_name ? `(${assignment.course_name})` : ''}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                      </TabsContent>
-                      
-                      <TabsContent value="text">
-                        <Textarea
-                          placeholder="Enter your assignment text here..."
-                          className="min-h-[200px]"
-                          value={textInput}
-                          onChange={handleTextChange}
-                        />
-                      </TabsContent>
-                    </Tabs>
+
+                        <Tabs defaultValue="file">
+                          <TabsList className="grid w-full grid-cols-2 mb-6">
+                            <TabsTrigger value="file">Upload File</TabsTrigger>
+                            <TabsTrigger value="text">Enter Text</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="file">
+                            <div className="border-2 border-dashed rounded-lg p-12 text-center">
+                              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <Label htmlFor="file-upload" className="cursor-pointer">
+                                <div className="mb-2 text-brand-blue font-medium">Click to upload</div>
+                                <p className="text-sm text-gray-500">
+                                  Supported formats: .doc, .docx, .pdf, .txt
+                                </p>
+                                <Input 
+                                  id="file-upload" 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept=".doc,.docx,.pdf,.txt" 
+                                  onChange={handleFileChange}
+                                />
+                              </Label>
+                              {file && (
+                                <div className="mt-4 text-sm p-2 bg-gray-50 rounded flex items-center justify-between">
+                                  <span>{file.name}</span>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setFile(null)}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </TabsContent>
+                          
+                          <TabsContent value="text">
+                            <Textarea
+                              placeholder="Enter your assignment text here..."
+                              className="min-h-[200px]"
+                              value={textInput}
+                              onChange={handleTextChange}
+                            />
+                          </TabsContent>
+                        </Tabs>
+                      </>
+                    )}
                   </CardContent>
                   <CardFooter>
                     <Button 
                       onClick={handleSubmit} 
                       className="w-full blue-purple-gradient hover:opacity-90"
+                      disabled={assignments.length === 0 || !selectedAssignment || (!file && !textInput.trim())}
                     >
                       <Upload className="mr-2 h-4 w-4" />
                       Submit for Assessment
@@ -228,6 +451,14 @@ const UploadAssignments = () => {
                         <p className="text-sm">{assessment.feedback}</p>
                       </div>
                     </div>
+                    
+                    <Alert className="mt-6" variant="default">
+                      <Info className="h-4 w-4" />
+                      <AlertTitle>AI-Powered Assessment</AlertTitle>
+                      <AlertDescription className="text-sm">
+                        This assessment was generated by an AI system. Your teacher may provide additional feedback and adjust the final grade if needed.
+                      </AlertDescription>
+                    </Alert>
                   </CardContent>
                   <CardFooter className="flex flex-col md:flex-row gap-4">
                     <Button 
