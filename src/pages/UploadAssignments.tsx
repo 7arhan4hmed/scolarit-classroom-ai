@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -15,12 +14,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Database } from '@/integrations/supabase/types';
 
-type Assignment = {
-  id: string;
-  title: string;
-  description: string;
-  course_id: string;
+type Assignment = Database['public']['Tables']['assignments']['Row'] & {
   course_name?: string;
 };
 
@@ -82,7 +78,7 @@ const UploadAssignments = () => {
         .from('assignments')
         .select(`
           *,
-          courses:course_id (
+          courses (
             name
           )
         `)
@@ -90,6 +86,11 @@ const UploadAssignments = () => {
         
       if (assignmentsError) throw assignmentsError;
       
+      if (!assignmentsData) {
+        setLoadingAssignments(false);
+        return;
+      }
+
       const formattedAssignments = assignmentsData.map(assignment => ({
         ...assignment,
         course_name: assignment.courses?.name
@@ -171,36 +172,38 @@ const UploadAssignments = () => {
         
       if (submissionError) throw submissionError;
       
-      setSubmissionId(submission[0].id);
-      
-      // Start AI assessment
-      setStep('assessment');
-      
-      const content = file ? `File submission: ${file.name}` : textInput;
-      
-      // Call the OpenAI assessment edge function
-      const { data: aiResponse, error: aiError } = await supabase.functions
-        .invoke('assess-assignment', {
-          body: {
-            submissionId: submission[0].id,
-            contentType: file ? 'file' : 'text',
-            content
-          }
+      if (submission && submission.length > 0) {
+        setSubmissionId(submission[0].id);
+        
+        // Start AI assessment
+        setStep('assessment');
+        
+        const content = file ? `File submission: ${file.name}` : textInput;
+        
+        // Call the OpenAI assessment edge function
+        const { data: aiResponse, error: aiError } = await supabase.functions
+          .invoke('assess-assignment', {
+            body: {
+              submissionId: submission[0].id,
+              contentType: file ? 'file' : 'text',
+              content
+            }
+          });
+          
+        if (aiError) throw aiError;
+        
+        setIsSubmitting(false);
+        setStep('review');
+        setAssessment({
+          grade: aiResponse.grade,
+          feedback: aiResponse.feedback
         });
         
-      if (aiError) throw aiError;
-      
-      setIsSubmitting(false);
-      setStep('review');
-      setAssessment({
-        grade: aiResponse.grade,
-        feedback: aiResponse.feedback
-      });
-      
-      toast({
-        title: "Assessment complete",
-        description: "Your assignment has been assessed.",
-      });
+        toast({
+          title: "Assessment complete",
+          description: "Your assignment has been assessed.",
+        });
+      }
     } catch (error: any) {
       console.error('Error submitting assignment:', error);
       setIsSubmitting(false);

@@ -69,7 +69,7 @@ serve(async (req) => {
     }
     
     const response = await openai.createCompletion({
-      model: "text-davinci-003",
+      model: "gpt-4o-mini",
       prompt,
       max_tokens: 800,
       temperature: 0.7,
