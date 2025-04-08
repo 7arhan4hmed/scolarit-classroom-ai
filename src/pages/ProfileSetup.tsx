@@ -9,7 +9,6 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import TeacherProfileForm from '@/components/profile/TeacherProfileForm';
 import StudentProfileForm from '@/components/profile/StudentProfileForm';
-import { Shield, Lock, Database } from 'lucide-react';
 
 const ProfileSetup = () => {
   const [searchParams] = useSearchParams();
@@ -146,47 +145,6 @@ const ProfileSetup = () => {
                 </Button>
               </div>
             </Card>
-
-            {/* New Supabase security messaging */}
-            <div className="mt-8 bg-white p-6 rounded-lg border border-blue-100 shadow-sm">
-              <h3 className="text-lg font-medium text-blue-800 mb-3">Powered by Supabase for Enhanced Security</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <Shield className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Secure Authentication</h4>
-                    <p className="text-sm text-gray-600">Your login credentials are protected by Supabase's enterprise-grade authentication system.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <Lock className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Data Privacy</h4>
-                    <p className="text-sm text-gray-600">Your personal information and educational data are encrypted and stored securely in Supabase's protected database.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    <Database className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">Reliable Performance</h4>
-                    <p className="text-sm text-gray-600">Enjoy seamless profile setup and data management backed by Supabase's reliable infrastructure.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <p className="text-xs text-gray-500 mt-4 text-center">
-                SCOLARIT is committed to protecting your data. See our <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a> for more information.
-              </p>
-            </div>
             
             <div className="text-center mt-6">
               <Button 
