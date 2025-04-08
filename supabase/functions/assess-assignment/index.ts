@@ -69,7 +69,7 @@ serve(async (req) => {
     }
     
     const response = await openai.createCompletion({
-      model: "text-davinci-003",
+      model: "text-davinci-003", // OpenAI deprecated model but keeping for now
       prompt,
       max_tokens: 800,
       temperature: 0.7,
