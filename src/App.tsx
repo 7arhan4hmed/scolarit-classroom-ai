@@ -21,6 +21,7 @@ import Moodle from "./pages/Moodle";
 import Blackboard from "./pages/Blackboard";
 import Contact from "./pages/Contact";
 import ProfileSetup from "./pages/ProfileSetup";
+import VideoMeet from "./pages/VideoMeet";
 
 // Add custom keyframes for animations we need
 import "./animations.css";
@@ -50,6 +51,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/profile-setup" element={<ProfileSetup />} />
+          <Route path="/video-meet" element={<VideoMeet />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

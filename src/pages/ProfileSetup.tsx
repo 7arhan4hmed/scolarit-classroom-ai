@@ -31,7 +31,7 @@ const ProfileSetup = () => {
         title: "Authentication required",
         description: "Please sign up or login first.",
       });
-      navigate('/signup');
+      navigate('/login');
       return;
     }
     
