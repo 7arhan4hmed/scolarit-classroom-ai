@@ -8,7 +8,7 @@ type UserType = 'teacher' | 'student';
 
 interface UserProfile {
   id: string;
-  full_name: string | null;
+  full_name?: string | null;
   user_type: UserType;
   profile_picture_url: string | null;
   institution: string | null;

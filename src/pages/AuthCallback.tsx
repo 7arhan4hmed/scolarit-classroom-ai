@@ -29,7 +29,7 @@ const AuthCallback = () => {
           if (profile?.institution) {
             toast({
               title: "Login successful",
-              description: `Welcome back to SCOLARIT, ${profile.full_name || 'User'}!`,
+              description: `Welcome back to SCOLARIT, ${profile.first_name || 'User'}!`,
             });
             navigate('/dashboard');
           } else {
