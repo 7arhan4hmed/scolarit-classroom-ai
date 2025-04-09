@@ -12,6 +12,11 @@ interface UserProfile {
   user_type: UserType;
   profile_picture_url: string | null;
   institution: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  department?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface AuthContextType {
@@ -78,7 +83,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Error fetching user profile:', error);
       } else if (data) {
-        setProfile(data as UserProfile);
+        // Transform the data to match UserProfile interface if necessary
+        const profileData: UserProfile = {
+          id: data.id,
+          full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || null,
+          user_type: data.user_type as UserType,
+          profile_picture_url: data.profile_picture_url,
+          institution: data.institution,
+          first_name: data.first_name || null,
+          last_name: data.last_name || null,
+          department: data.department || null
+        };
+        setProfile(profileData);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);

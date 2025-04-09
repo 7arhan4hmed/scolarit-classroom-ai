@@ -1,177 +1,139 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import TeacherProfileForm from '@/components/profile/TeacherProfileForm';
 import StudentProfileForm from '@/components/profile/StudentProfileForm';
-import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSetup = () => {
   const [searchParams] = useSearchParams();
-  const { user, profile } = useAuth();
-  const userType = profile?.user_type || searchParams.get('type') || 'teacher';
   const [step, setStep] = useState(1);
-  const [maxSteps, setMaxSteps] = useState(3);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [profileData, setProfileData] = useState({});
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const userType = profile?.user_type || searchParams.get('type') as 'teacher' | 'student' || 'student';
 
   useEffect(() => {
-    // Redirect if not authenticated
     if (!user) {
       toast({
-        variant: "destructive",
         title: "Authentication required",
-        description: "Please sign up or login first.",
+        description: "Please sign in to set up your profile",
+        variant: "destructive",
       });
       navigate('/login');
-      return;
     }
+    
+    // If profile is already set up, redirect to dashboard
+    if (profile?.institution) {
+      navigate('/dashboard');
+    }
+  }, [user, profile, navigate, toast]);
 
-    // Set max steps based on user type
-    setMaxSteps(userType === 'teacher' ? 3 : 2);
-  }, [navigate, toast, user, userType]);
-
-  const handleFormUpdate = (data: any) => {
-    setFormData(prevData => ({
-      ...prevData,
-      ...data
-    }));
-  };
-
-  const handleNext = () => {
-    if (step < maxSteps) {
+  const handleProfileUpdate = (data: any) => {
+    setProfileData((prev) => ({ ...prev, ...data }));
+    
+    if (step < 3) {
       setStep(step + 1);
     } else {
       handleSubmit();
     }
   };
 
-  const handlePrevious = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!user?.id) return;
-    setIsLoading(true);
-
+    if (!user) return;
+    
+    setIsSubmitting(true);
+    
     try {
-      // Update user profile in Supabase
       const { error } = await supabase
         .from('profiles')
         .update({
-          ...formData,
-          updated_at: new Date().toISOString()
+          ...profileData,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
-
-      if (error) throw error;
-
+      
+      if (error) {
+        throw error;
+      }
+      
       toast({
-        title: "Profile setup complete!",
-        description: "You're all set to use SCOLARIT.",
+        title: "Profile set up successfully",
+        description: "Welcome to SCOLARIT!",
       });
-
+      
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Profile setup error:', error);
+    } catch (error: any) {
+      console.error('Error setting up profile:', error);
       toast({
         variant: "destructive",
-        title: "Failed to save profile",
-        description: "Please try again. If the problem persists, contact support.",
+        title: "Profile setup failed",
+        description: error.message || "Something went wrong. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  const calculateProgress = () => {
-    return (step / maxSteps) * 100;
+  const handleSkip = () => {
+    if (step < 3) {
+      setStep(step + 1);
+    } else {
+      handleSubmit();
+    }
   };
 
-  if (!user) {
-    return null; // Will redirect in useEffect
-  }
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow bg-gray-50 py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold gradient-text">Complete Your Profile</h1>
-              <p className="text-gray-600 mt-2">
-                {userType === 'teacher'
-                  ? "Help us personalize SCOLARIT for your teaching needs"
-                  : "Tell us more about your learning preferences"}
-              </p>
-            </div>
-
-            <Card className="p-6">
-              <div className="mb-8">
-                <div className="flex justify-between text-sm font-medium mb-2">
-                  <span>Step {step} of {maxSteps}</span>
-                  <span>{Math.round(calculateProgress())}% Complete</span>
-                </div>
-                <Progress value={calculateProgress()} className="h-2" />
-              </div>
-
-              {userType === 'teacher' ? (
-                <TeacherProfileForm step={step} onUpdate={handleFormUpdate} />
-              ) : (
-                <StudentProfileForm step={step} onUpdate={handleFormUpdate} />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="max-w-md w-full">
+        <CardHeader>
+          <CardTitle className="text-2xl">
+            {userType === 'teacher' ? 'Teacher Profile Setup' : 'Student Profile Setup'}
+          </CardTitle>
+          <CardDescription>
+            Step {step} of 3: {step === 1 ? 'Basic Information' : step === 2 ? 'Education Details' : 'Preferences'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {userType === 'teacher' ? (
+            <TeacherProfileForm step={step} onUpdate={handleProfileUpdate} />
+          ) : (
+            <StudentProfileForm step={step} onUpdate={handleProfileUpdate} />
+          )}
+          
+          <div className="flex items-center justify-between mt-6">
+            <Button 
+              variant="outline" 
+              onClick={handleSkip}
+              disabled={isSubmitting}
+            >
+              {step < 3 ? 'Skip' : 'Skip & Finish'}
+            </Button>
+            
+            <Button 
+              type="button"
+              onClick={() => document.getElementById(`profile-form-step-${step}`)?.dispatchEvent(
+                new Event('submit', { cancelable: true, bubbles: true })
               )}
-
-              <div className="flex justify-between mt-8">
-                <Button
-                  variant="outline"
-                  onClick={handlePrevious}
-                  disabled={step === 1 || isLoading}
-                >
-                  Previous
-                </Button>
-
-                <Button
-                  onClick={handleNext}
-                  disabled={isLoading}
-                  className={userType === 'teacher' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
-                      <span>Saving...</span>
-                    </>
-                  ) : step === maxSteps ? 'Complete Profile' : 'Next Step'}
-                </Button>
-              </div>
-            </Card>
-
-            <div className="text-center mt-6">
-              <Button
-                variant="link"
-                onClick={() => navigate('/dashboard')}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Skip for now
-              </Button>
-              <p className="text-xs text-gray-400 mt-1">
-                You can complete your profile later from your account settings
-              </p>
-            </div>
+              disabled={isSubmitting}
+              className={userType === 'teacher' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  <span>Saving...</span>
+                </>
+              ) : step < 3 ? 'Continue' : 'Complete Setup'}
+            </Button>
           </div>
-        </div>
-      </main>
-      <Footer />
+        </CardContent>
+      </Card>
     </div>
   );
 };
