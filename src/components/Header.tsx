@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare } from 'lucide-react';
+import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   NavigationMenu,
@@ -11,12 +11,13 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-
+  const { user, profile, signOut } = useAuth();
+  
   return (
     <header className="border-b sticky top-0 bg-white z-50">
       <div className="container mx-auto flex items-center justify-between py-4">
@@ -41,10 +42,18 @@ const Header = () => {
             <Book className="h-4 w-4" />
             <span>How It Works</span>
           </Link>
-          <Link to="/upload" className={`text-sm font-medium ${location.pathname === '/upload' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
-            <Upload className="h-4 w-4" />
-            <span>Upload Assignments</span>
-          </Link>
+          {user && (
+            <>
+              <Link to="/upload" className={`text-sm font-medium ${location.pathname === '/upload' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <Upload className="h-4 w-4" />
+                <span>Upload Assignments</span>
+              </Link>
+              <Link to="/video-meet" className={`text-sm font-medium ${location.pathname === '/video-meet' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <MessageSquare className="h-4 w-4" />
+                <span>Video Meet</span>
+              </Link>
+            </>
+          )}
           <Link to="/contact" className={`text-sm font-medium ${location.pathname === '/contact' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
             <MessageSquare className="h-4 w-4" />
             <span>Contact</span>
@@ -119,19 +128,33 @@ const Header = () => {
           </Button>
         </div>
         
-        {/* Login/Signup Buttons */}
+        {/* Login/Signup/Profile Buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
-            <Link to="/login">
-              <UserCheck className="mr-2 h-4 w-4" />
-              Log in
-            </Link>
-          </Button>
-          <Button className="blue-purple-gradient hover:opacity-90" asChild>
-            <Link to="/signup">
-              Try for free
-            </Link>
-          </Button>
+          {user ? (
+            <>
+              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </Button>
+              <Button variant="ghost" onClick={signOut} className="text-gray-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                <Link to="/login">
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Log in
+                </Link>
+              </Button>
+              <Button className="blue-purple-gradient hover:opacity-90" asChild>
+                <Link to="/signup">
+                  Try for free
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
       
@@ -163,14 +186,26 @@ const Header = () => {
               <Book className="h-4 w-4" />
               <span>How It Works</span>
             </Link>
-            <Link 
-              to="/upload" 
-              className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Upload className="h-4 w-4" />
-              <span>Upload Assignments</span>
-            </Link>
+            {user && (
+              <>
+                <Link 
+                  to="/upload" 
+                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Upload className="h-4 w-4" />
+                  <span>Upload Assignments</span>
+                </Link>
+                <Link 
+                  to="/video-meet" 
+                  className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span>Video Meet</span>
+                </Link>
+              </>
+            )}
             <Link 
               to="/contact" 
               className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
@@ -207,16 +242,32 @@ const Header = () => {
               </Link>
             </div>
             <div className="flex flex-col gap-2 pt-2 border-t">
-              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                  Log in
-                </Link>
-              </Button>
-              <Button className="blue-purple-gradient hover:opacity-90" asChild>
-                <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
-                  Try for free
-                </Link>
-              </Button>
+              {user ? (
+                <>
+                  <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      Dashboard
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" onClick={() => { signOut(); setMobileMenuOpen(false); }} className="text-gray-600">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Log out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                      Log in
+                    </Link>
+                  </Button>
+                  <Button className="blue-purple-gradient hover:opacity-90" asChild>
+                    <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      Try for free
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

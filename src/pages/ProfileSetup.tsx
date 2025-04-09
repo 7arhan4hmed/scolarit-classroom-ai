@@ -9,23 +9,23 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import TeacherProfileForm from '@/components/profile/TeacherProfileForm';
 import StudentProfileForm from '@/components/profile/StudentProfileForm';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProfileSetup = () => {
   const [searchParams] = useSearchParams();
-  const userType = searchParams.get('type') || 'teacher';
+  const { user, profile } = useAuth();
+  const userType = profile?.user_type || searchParams.get('type') || 'teacher';
   const [step, setStep] = useState(1);
   const [maxSteps, setMaxSteps] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({});
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // User data from local storage
-  const [userData, setUserData] = useState<any>(null);
-  
+
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
+    // Redirect if not authenticated
+    if (!user) {
       toast({
         variant: "destructive",
         title: "Authentication required",
@@ -34,13 +34,18 @@ const ProfileSetup = () => {
       navigate('/login');
       return;
     }
-    
-    setUserData(JSON.parse(storedUser));
-    
+
     // Set max steps based on user type
     setMaxSteps(userType === 'teacher' ? 3 : 2);
-  }, [navigate, toast, userType]);
-  
+  }, [navigate, toast, user, userType]);
+
+  const handleFormUpdate = (data: any) => {
+    setFormData(prevData => ({
+      ...prevData,
+      ...data
+    }));
+  };
+
   const handleNext = () => {
     if (step < maxSteps) {
       setStep(step + 1);
@@ -48,29 +53,34 @@ const ProfileSetup = () => {
       handleSubmit();
     }
   };
-  
+
   const handlePrevious = () => {
     if (step > 1) {
       setStep(step - 1);
     }
   };
-  
+
   const handleSubmit = async () => {
+    if (!user?.id) return;
     setIsLoading(true);
-    
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update user profile complete status in local storage
-      const updatedUser = { ...userData, profileComplete: true };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
+      // Update user profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          ...formData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
       toast({
         title: "Profile setup complete!",
         description: "You're all set to use SCOLARIT.",
       });
-      
+
       navigate('/dashboard');
     } catch (error) {
       console.error('Profile setup error:', error);
@@ -83,15 +93,15 @@ const ProfileSetup = () => {
       setIsLoading(false);
     }
   };
-  
+
   const calculateProgress = () => {
     return (step / maxSteps) * 100;
   };
-  
-  if (!userData) {
+
+  if (!user) {
     return null; // Will redirect in useEffect
   }
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -101,12 +111,12 @@ const ProfileSetup = () => {
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold gradient-text">Complete Your Profile</h1>
               <p className="text-gray-600 mt-2">
-                {userType === 'teacher' 
-                  ? "Help us personalize SCOLARIT for your teaching needs" 
+                {userType === 'teacher'
+                  ? "Help us personalize SCOLARIT for your teaching needs"
                   : "Tell us more about your learning preferences"}
               </p>
             </div>
-            
+
             <Card className="p-6">
               <div className="mb-8">
                 <div className="flex justify-between text-sm font-medium mb-2">
@@ -115,13 +125,13 @@ const ProfileSetup = () => {
                 </div>
                 <Progress value={calculateProgress()} className="h-2" />
               </div>
-              
+
               {userType === 'teacher' ? (
-                <TeacherProfileForm step={step} />
+                <TeacherProfileForm step={step} onUpdate={handleFormUpdate} />
               ) : (
-                <StudentProfileForm step={step} />
+                <StudentProfileForm step={step} onUpdate={handleFormUpdate} />
               )}
-              
+
               <div className="flex justify-between mt-8">
                 <Button
                   variant="outline"
@@ -130,8 +140,8 @@ const ProfileSetup = () => {
                 >
                   Previous
                 </Button>
-                
-                <Button 
+
+                <Button
                   onClick={handleNext}
                   disabled={isLoading}
                   className={userType === 'teacher' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'}
@@ -145,10 +155,10 @@ const ProfileSetup = () => {
                 </Button>
               </div>
             </Card>
-            
+
             <div className="text-center mt-6">
-              <Button 
-                variant="link" 
+              <Button
+                variant="link"
                 onClick={() => navigate('/dashboard')}
                 className="text-gray-500 hover:text-gray-700"
               >

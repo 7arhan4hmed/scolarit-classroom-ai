@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -8,8 +9,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { BookOpen, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -30,6 +31,14 @@ const SignUp = () => {
   const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp, profile } = useAuth();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    if (profile) {
+      navigate('/dashboard');
+    }
+  }, [profile, navigate]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -45,18 +54,23 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
-      console.log(`${userType.charAt(0).toUpperCase() + userType.slice(1)} sign up attempt with:`, values);
+      const { error } = await signUp(values.email, values.password, values.name, userType);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      localStorage.setItem('user', JSON.stringify({ name: values.name, email: values.email, type: userType, profileComplete: false }));
-      
-      toast({
-        title: "Account created",
-        description: `Welcome to SCOLARIT, ${values.name}! Let's set up your profile.`,
-      });
-      
-      navigate(`/profile-setup?type=${userType}`);
+      if (error) {
+        console.error('Sign up error:', error);
+        toast({
+          variant: "destructive",
+          title: "Sign up failed",
+          description: error.message || "Something went wrong. Please try again.",
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: `Welcome to SCOLARIT, ${values.name}! Let's set up your profile.`,
+        });
+        
+        navigate(`/profile-setup?type=${userType}`);
+      }
     } catch (error) {
       console.error('Sign up error:', error);
       toast({

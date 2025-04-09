@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -31,30 +33,70 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/google-classroom" element={<GoogleClassroom />} />
-          <Route path="/canvas" element={<Canvas />} />
-          <Route path="/moodle" element={<Moodle />} />
-          <Route path="/blackboard" element={<Blackboard />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/how-it-works" element={<HowItWorks />} />
-          <Route path="/upload" element={<UploadAssignments />} />
-          <Route path="/for-teachers" element={<ForTeachers />} />
-          <Route path="/for-students" element={<ForStudents />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/profile-setup" element={<ProfileSetup />} />
-          <Route path="/video-meet" element={<VideoMeet />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/for-teachers" element={<ForTeachers />} />
+            <Route path="/for-students" element={<ForStudents />} />
+            <Route path="/contact" element={<Contact />} />
+            
+            {/* Protected routes - general auth */}
+            <Route path="/profile-setup" element={
+              <ProtectedRoute>
+                <ProfileSetup />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/upload" element={
+              <ProtectedRoute>
+                <UploadAssignments />
+              </ProtectedRoute>
+            } />
+            <Route path="/video-meet" element={
+              <ProtectedRoute>
+                <VideoMeet />
+              </ProtectedRoute>
+            } />
+            
+            {/* LMS integration routes */}
+            <Route path="/google-classroom" element={
+              <ProtectedRoute>
+                <GoogleClassroom />
+              </ProtectedRoute>
+            } />
+            <Route path="/canvas" element={
+              <ProtectedRoute>
+                <Canvas />
+              </ProtectedRoute>
+            } />
+            <Route path="/moodle" element={
+              <ProtectedRoute>
+                <Moodle />
+              </ProtectedRoute>
+            } />
+            <Route path="/blackboard" element={
+              <ProtectedRoute>
+                <Blackboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
