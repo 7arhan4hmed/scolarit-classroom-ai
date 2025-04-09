@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Google } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -23,11 +23,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface SignUpFormProps {
   onSubmit: (values: FormValues) => Promise<void>;
+  onGoogleSignUp: () => Promise<void>;
   isLoading: boolean;
   userType: 'teacher' | 'student';
 }
 
-const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isLoading, userType }) => {
+const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, onGoogleSignUp, isLoading, userType }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -173,6 +174,26 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSubmit, isLoading, userType }
           ) : (
             `Create ${userType === 'teacher' ? 'Teacher' : 'Student'} Account`
           )}
+        </Button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-gray-50 px-2 text-sm text-gray-500">Or</span>
+          </div>
+        </div>
+        
+        <Button 
+          type="button" 
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2"
+          onClick={onGoogleSignUp}
+          disabled={isLoading}
+        >
+          <Google size={18} />
+          <span>Continue with Google</span>
         </Button>
       </form>
     </Form>

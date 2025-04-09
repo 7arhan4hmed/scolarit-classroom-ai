@@ -19,7 +19,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { signIn, profile } = useAuth();
+  const { signIn, signInWithGoogle, profile } = useAuth();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -73,6 +73,33 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signInWithGoogle(userType);
+      
+      if (error) {
+        console.error('Google login error:', error);
+        toast({
+          variant: "destructive",
+          title: "Google login failed",
+          description: error.message || "An error occurred during Google login.",
+        });
+      }
+      // Successful login will redirect to the callback URL and then to dashboard
+    } catch (error) {
+      console.error('Google login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Google login failed",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -96,7 +123,8 @@ const Login = () => {
           </TabsContent>
           
           <LoginForm 
-            onSubmit={handleSubmit} 
+            onSubmit={handleSubmit}
+            onGoogleLogin={handleGoogleLogin}
             isLoading={isLoading} 
             userType={userType} 
           />

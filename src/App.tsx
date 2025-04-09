@@ -24,6 +24,7 @@ import Blackboard from "./pages/Blackboard";
 import Contact from "./pages/Contact";
 import ProfileSetup from "./pages/ProfileSetup";
 import VideoMeet from "./pages/VideoMeet";
+import AuthCallback from "./pages/AuthCallback";
 
 // Add custom keyframes for animations we need
 import "./animations.css";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/for-teachers" element={<ForTeachers />} />
             <Route path="/for-students" element={<ForStudents />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/auth-callback" element={<AuthCallback />} />
             
             {/* Protected routes - general auth */}
             <Route path="/profile-setup" element={

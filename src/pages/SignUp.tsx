@@ -20,7 +20,7 @@ const SignUp = () => {
   const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { signUp, profile } = useAuth();
+  const { signUp, signInWithGoogle, profile } = useAuth();
 
   // Check if user is already logged in
   useEffect(() => {
@@ -62,6 +62,33 @@ const SignUp = () => {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signInWithGoogle(userType);
+      
+      if (error) {
+        console.error('Google sign up error:', error);
+        toast({
+          variant: "destructive",
+          title: "Google sign up failed",
+          description: error.message || "An error occurred during Google sign up.",
+        });
+      }
+      // Successful sign up will redirect to the callback URL
+    } catch (error) {
+      console.error('Google sign up error:', error);
+      toast({
+        variant: "destructive",
+        title: "Google sign up failed",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -85,7 +112,8 @@ const SignUp = () => {
           </TabsContent>
         
           <SignUpForm 
-            onSubmit={handleSubmit} 
+            onSubmit={handleSubmit}
+            onGoogleSignUp={handleGoogleSignUp}
             isLoading={isLoading} 
             userType={userType} 
           />

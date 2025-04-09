@@ -6,7 +6,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, LogIn, Google } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -17,11 +18,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface LoginFormProps {
   onSubmit: (values: FormValues) => void;
+  onGoogleLogin: () => Promise<void>;
   isLoading: boolean;
   userType: 'teacher' | 'student';
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, userType }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin, isLoading, userType }) => {
   const [showPassword, setShowPassword] = useState(false);
   
   const form = useForm<FormValues>({
@@ -111,6 +113,26 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading, userType }) 
               <span>Sign in as {userType === 'teacher' ? 'Teacher' : 'Student'}</span>
             </>
           )}
+        </Button>
+        
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-gray-50 px-2 text-sm text-gray-500">Or</span>
+          </div>
+        </div>
+        
+        <Button 
+          type="button" 
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2"
+          onClick={onGoogleLogin}
+          disabled={isLoading}
+        >
+          <Google size={18} />
+          <span>Continue with Google</span>
         </Button>
       </form>
     </Form>

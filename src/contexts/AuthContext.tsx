@@ -25,6 +25,7 @@ interface AuthContextType {
   isLoading: boolean;
   signUp: (email: string, password: string, name: string, userType: UserType) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: (userType?: UserType) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -146,6 +147,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signInWithGoogle = async (userType?: UserType) => {
+    try {
+      // Store user type in session storage to retrieve after redirect
+      if (userType) {
+        sessionStorage.setItem('selectedUserType', userType);
+      }
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          redirectTo: `${window.location.origin}/auth-callback`,
+        },
+      });
+
+      return { error };
+    } catch (error) {
+      console.error('Error during Google sign in:', error);
+      return { error };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     navigate('/login');
@@ -157,6 +183,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isLoading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
   };
 
