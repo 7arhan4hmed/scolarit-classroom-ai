@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Error fetching user profile:', error);
       } else if (data) {
-        // Transform the data to match UserProfile interface if necessary
+        // Transform the data to match UserProfile interface
         const profileData: UserProfile = {
           id: data.id,
           full_name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || null,
@@ -92,7 +92,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           institution: data.institution,
           first_name: data.first_name || null,
           last_name: data.last_name || null,
-          department: data.department || null
+          department: data.department || null,
+          created_at: data.created_at,
+          updated_at: data.updated_at
         };
         setProfile(profileData);
       }
