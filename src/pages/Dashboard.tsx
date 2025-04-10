@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { BarChart, FileText, Upload, Search, Plus, Filter, ArrowUpRight, Eye, Al
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useAuth } from '@/contexts/AuthContext';
 
 const recentAssignments = [
   {
@@ -47,11 +46,15 @@ const classes = [
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
-  const { profile, user } = useAuth();
 
-  const isProfileComplete = profile?.institution !== null;
-  const userType = profile?.user_type || 'student';
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const handleViewDetails = (id: number) => {
     toast({
@@ -67,30 +70,26 @@ const Dashboard = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-[#005558]">
-                {userType === 'teacher' ? 'Teacher Dashboard' : 'Student Dashboard'}
-              </h1>
-              <p className="text-gray-500">Welcome{profile?.full_name ? `, ${profile.full_name}` : ''} to your SCOLARIT dashboard</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-[#005558]">Dashboard</h1>
+              <p className="text-gray-500">Welcome{user?.name ? `, ${user.name}` : ''} to your SCOLARIT dashboard</p>
             </div>
             
             <div className="flex items-center gap-3 mt-4 md:mt-0">
-              {userType === 'teacher' && (
-                <Button asChild variant="outline" size="sm">
-                  <Link to="/google-classroom">
-                    Connect Class
-                  </Link>
-                </Button>
-              )}
+              <Button asChild variant="outline" size="sm">
+                <Link to="/google-classroom">
+                  Connect Class
+                </Link>
+              </Button>
               <Button asChild className="bg-[#005558] hover:bg-[#005558]/90" size="sm">
                 <Link to="/upload">
                   <Upload className="mr-2 h-4 w-4" />
-                  {userType === 'teacher' ? 'Create Assignment' : 'Submit Assignment'}
+                  New Assignment
                 </Link>
               </Button>
             </div>
           </div>
           
-          {!isProfileComplete && (
+          {user && user.profileComplete === false && (
             <Alert className="mb-6 border-yellow-500 bg-yellow-50">
               <AlertCircle className="h-4 w-4 text-yellow-600" />
               <AlertTitle className="text-yellow-700">Complete your profile</AlertTitle>
@@ -98,7 +97,7 @@ const Dashboard = () => {
                 Your profile is incomplete. Complete your profile to unlock all features.
                 <div className="mt-2">
                   <Button asChild variant="outline" size="sm" className="border-yellow-500 text-yellow-700 hover:bg-yellow-100">
-                    <Link to={`/profile-setup?type=${userType}`}>
+                    <Link to={`/profile-setup?type=${user.type}`}>
                       Complete Profile
                     </Link>
                   </Button>
@@ -110,12 +109,8 @@ const Dashboard = () => {
           <Tabs defaultValue="overview" className="space-y-6" onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="assignments">
-                {userType === 'teacher' ? 'Assignments' : 'My Work'}
-              </TabsTrigger>
-              <TabsTrigger value="classes">
-                {userType === 'teacher' ? 'My Classes' : 'Enrolled Classes'}
-              </TabsTrigger>
+              <TabsTrigger value="assignments">Assignments</TabsTrigger>
+              <TabsTrigger value="classes">Classes</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
             
@@ -123,55 +118,31 @@ const Dashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">
-                      {userType === 'teacher' ? 'Total Assignments' : 'Assignments Due'}
-                    </CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-500">Total Assignments</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">
-                      {userType === 'teacher' ? '24' : '8'}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {userType === 'teacher' 
-                        ? '12 graded, 8 in review, 4 draft' 
-                        : '3 submitted, 5 pending'}
-                    </p>
+                    <div className="text-3xl font-bold">24</div>
+                    <p className="text-xs text-gray-500 mt-1">12 graded, 8 in review, 4 draft</p>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">
-                      {userType === 'teacher' ? 'Classes Taught' : 'Average Grade'}
-                    </CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-500">Average Grade</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">
-                      {userType === 'teacher' ? '4' : 'B+'}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {userType === 'teacher' 
-                        ? '105 total students' 
-                        : '3.4 GPA equivalent'}
-                    </p>
+                    <div className="text-3xl font-bold">B+</div>
+                    <p className="text-xs text-gray-500 mt-1">3.4 GPA equivalent</p>
                   </CardContent>
                 </Card>
                 
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-500">
-                      {userType === 'teacher' ? 'Time Saved' : 'Feedback Received'}
-                    </CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-500">Time Saved</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">
-                      {userType === 'teacher' ? '18h' : '14'}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {userType === 'teacher' 
-                        ? 'This semester' 
-                        : 'Detailed comments'}
-                    </p>
+                    <div className="text-3xl font-bold">18h</div>
+                    <p className="text-xs text-gray-500 mt-1">This semester</p>
                   </CardContent>
                 </Card>
               </div>
@@ -179,11 +150,7 @@ const Dashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Assignments</CardTitle>
-                  <CardDescription>
-                    {userType === 'teacher' 
-                      ? 'Your recently created or graded assignments' 
-                      : 'Your recently submitted or graded work'}
-                  </CardDescription>
+                  <CardDescription>Your recently uploaded or graded assignments</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -275,17 +242,13 @@ const Dashboard = () => {
               <Card>
                 <CardHeader>
                   <div className="flex flex-col md:flex-row justify-between md:items-center">
-                    <CardTitle>
-                      {userType === 'teacher' ? 'My Classes' : 'Enrolled Classes'}
-                    </CardTitle>
-                    {userType === 'teacher' && (
-                      <Button asChild className="mt-2 md:mt-0">
-                        <Link to="/google-classroom">
-                          <Plus className="mr-1 h-4 w-4" />
-                          Add Class
-                        </Link>
-                      </Button>
-                    )}
+                    <CardTitle>My Classes</CardTitle>
+                    <Button asChild className="mt-2 md:mt-0">
+                      <Link to="/google-classroom">
+                        <Plus className="mr-1 h-4 w-4" />
+                        Add Class
+                      </Link>
+                    </Button>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -298,9 +261,7 @@ const Dashboard = () => {
                           <span>{cls.assignments} Assignments</span>
                         </div>
                         <div className="mt-4 flex justify-end">
-                          <Button variant="outline" size="sm">
-                            {userType === 'teacher' ? 'Manage Class' : 'View Class'}
-                          </Button>
+                          <Button variant="outline" size="sm">Manage Class</Button>
                         </div>
                       </div>
                     ))}
