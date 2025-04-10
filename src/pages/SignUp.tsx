@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BookOpen, Mail, Lock, Eye, EyeOff, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -47,9 +49,29 @@ const SignUp = () => {
     try {
       console.log(`${userType.charAt(0).toUpperCase() + userType.slice(1)} sign up attempt with:`, values);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use Supabase's auth.signUp method to register the user
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.name,
+            user_type: userType
+          }
+        }
+      });
       
-      localStorage.setItem('user', JSON.stringify({ name: values.name, email: values.email, type: userType, profileComplete: false }));
+      if (error) {
+        throw error;
+      }
+      
+      // Still set localStorage for backward compatibility with other parts of the app
+      localStorage.setItem('user', JSON.stringify({ 
+        name: values.name, 
+        email: values.email, 
+        type: userType, 
+        profileComplete: false 
+      }));
       
       toast({
         title: "Account created",
@@ -57,12 +79,12 @@ const SignUp = () => {
       });
       
       navigate(`/profile-setup?type=${userType}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign up error:', error);
       toast({
         variant: "destructive",
         title: "Sign up failed",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
       });
     } finally {
       setIsLoading(false);
