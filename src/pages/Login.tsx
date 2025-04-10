@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { BookOpen, LogIn, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -38,28 +39,49 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // This is a mock login implementation
-      // In a real app, you would call an authentication service
-      console.log(`${userType.charAt(0).toUpperCase() + userType.slice(1)} login attempt with:`, values);
+      // Use Supabase's auth.signInWithPassword method to sign in the user
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (error) {
+        throw error;
+      }
       
-      // Mock successful login
-      localStorage.setItem('user', JSON.stringify({ email: values.email, type: userType }));
+      // Check if the user's type matches the selected tab
+      const userMetadata = data.user?.user_metadata;
+      const actualUserType = userMetadata?.user_type || 'student';
+      
+      if (actualUserType !== userType) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: `You're trying to log in as a ${userType}, but your account is registered as a ${actualUserType}.`,
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      // Still set localStorage for backward compatibility with other parts of the app
+      localStorage.setItem('user', JSON.stringify({ 
+        email: values.email, 
+        type: actualUserType,
+        name: userMetadata?.full_name || ''
+      }));
       
       toast({
         title: "Login successful",
-        description: `Welcome back to SCOLARIT, ${userType === 'teacher' ? 'Teacher' : 'Student'}!`,
+        description: `Welcome back to SCOLARIT, ${userMetadata?.full_name || ''}!`,
       });
       
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: error.message || "Please check your credentials and try again.",
       });
     } finally {
       setIsLoading(false);
