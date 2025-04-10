@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, FileText, Sparkles, CheckCheck } from 'lucide-react';
+import { Upload, FileText, Sparkles, CheckCheck, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const UploadAssignments = () => {
   const [step, setStep] = useState<'upload' | 'assessment' | 'review'>('upload');
@@ -18,6 +19,7 @@ const UploadAssignments = () => {
   const [textInput, setTextInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [assessment, setAssessment] = useState<{ grade: string; feedback: string } | null>(null);
+  const [title, setTitle] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -32,11 +34,24 @@ const UploadAssignments = () => {
     setTextInput(e.target.value);
   };
   
-  const handleSubmit = () => {
-    if (!file && !textInput.trim()) {
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
+  };
+  
+  const handleSubmit = async () => {
+    if (!textInput.trim() && !file) {
       toast({
         title: "Missing content",
         description: "Please upload a file or enter text to submit for assessment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!title.trim()) {
+      toast({
+        title: "Missing title",
+        description: "Please enter a title for your assignment.",
         variant: "destructive",
       });
       return;
@@ -45,23 +60,60 @@ const UploadAssignments = () => {
     setIsSubmitting(true);
     setStep('assessment');
     
-    // Simulate assessment process
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setStep('review');
-      setAssessment({
-        grade: "B+",
-        feedback: "The assignment demonstrates good understanding of the core concepts. There's a clear thesis statement and supporting evidence. Consider adding more specific examples and improving the transitions between paragraphs for a stronger argument flow. The conclusion effectively summarizes the main points but could be strengthened by connecting back to the broader implications of your thesis."
-      });
+    try {
+      // If file is uploaded, we would process it here
+      // For now, we'll just use the text input for AI assessment
+      const contentToAssess = textInput.trim();
       
+      if (contentToAssess) {
+        const { data, error } = await supabase.functions.invoke('generate-ai-feedback', {
+          body: {
+            assignmentText: contentToAssess,
+            assignmentTitle: title
+          }
+        });
+        
+        if (error) {
+          throw new Error(`Error generating AI feedback: ${error.message}`);
+        }
+        
+        if (data) {
+          setAssessment({
+            grade: data.grade || 'N/A',
+            feedback: data.feedback || 'No feedback provided'
+          });
+        }
+      } else if (file) {
+        // For files, we would normally extract text or handle differently
+        // For now, we'll just provide a simulated response
+        setTimeout(() => {
+          setAssessment({
+            grade: "B+",
+            feedback: "This analysis shows good understanding of the subject matter. Consider adding more specific examples and improving the transitions between sections."
+          });
+        }, 2000);
+      }
+      
+      setStep('review');
       toast({
         title: "Assessment complete",
         description: "Your assignment has been assessed.",
       });
-    }, 3000);
+    } catch (error) {
+      console.error("Error during assessment:", error);
+      toast({
+        title: "Assessment failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+      setStep('upload');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleApprove = () => {
+    // Here we would normally save to database
     toast({
       title: "Assessment approved",
       description: "The assessment has been saved to your dashboard.",
@@ -72,6 +124,7 @@ const UploadAssignments = () => {
   const handleReset = () => {
     setFile(null);
     setTextInput('');
+    setTitle('');
     setAssessment(null);
     setStep('upload');
   };
@@ -128,7 +181,18 @@ const UploadAssignments = () => {
                       Upload a file or enter text directly for assessment.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Assignment Title</Label>
+                      <Input 
+                        id="title" 
+                        placeholder="Enter assignment title"
+                        value={title}
+                        onChange={handleTitleChange}
+                        className="mt-1"
+                      />
+                    </div>
+                    
                     <Tabs defaultValue="file">
                       <TabsList className="grid w-full grid-cols-2 mb-6">
                         <TabsTrigger value="file">Upload File</TabsTrigger>
@@ -197,10 +261,12 @@ const UploadAssignments = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex flex-col items-center py-12">
-                    <Sparkles className="h-16 w-16 text-brand-purple animate-pulse mb-4" />
-                    <p className="text-center text-lg font-medium mb-2">Processing...</p>
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-16 w-16 text-brand-purple animate-spin" />
+                    </div>
+                    <p className="text-center text-lg font-medium mt-6 mb-2">Processing...</p>
                     <p className="text-center text-gray-500 mb-6">
-                      This will take just a moment
+                      {title ? `Analyzing "${title}"` : "Analyzing your submission"}
                     </p>
                     <div className="w-full max-w-md h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full blue-purple-gradient rounded-full animate-progress"></div>
@@ -225,7 +291,7 @@ const UploadAssignments = () => {
                       </div>
                       <div className="md:col-span-2 bg-gray-50 p-4 rounded-lg">
                         <h3 className="text-sm font-medium text-gray-500 mb-2">Feedback</h3>
-                        <p className="text-sm">{assessment.feedback}</p>
+                        <div className="text-sm whitespace-pre-line">{assessment.feedback}</div>
                       </div>
                     </div>
                   </CardContent>
