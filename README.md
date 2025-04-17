@@ -1,73 +1,108 @@
-# Welcome to your Lovable project
+🚀 Welcome to Project SCOLARIT
+📌 Project Info
+🌐 Live URL: https://scolarit.netlify.app/
 
-## Project info
+👥 Team
+👨‍💻 Team Name: Brackets & Bugs
+🧠 Team Lead: Md Farhan
+👩‍💻 Team Member: Yashwi Panday
 
-**URL**: https://lovable.dev/projects/5c58f756-afe0-42e7-a31f-81f4aa103520
+🧠 Core Integrations
+🛢️ Supabase (Database & Auth)
+Realtime database with PostgreSQL
 
-## How can I edit this code?
+⚙️ Authentication for users (students & teachers)
 
-There are several ways of editing your application.
+📦 Storage for assignments and submissions
 
-**Use Lovable**
+🔐 Row-level security enabled
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5c58f756-afe0-42e7-a31f-81f4aa103520) and start prompting.
+🤖 Gemini Flash 2.0 (by Google)
+✨ Used for intelligent content generation and summarization
 
-Changes made via Lovable will be committed automatically to this repo.
+📚 AI-assisted feedback for assignments and answers
 
-**Use your preferred IDE**
+💬 Natural language understanding & teaching assistant features
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+🧠 OpenAI API
+🚀 GPT integration for chat & guidance
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+✅ Used for AI-based answer suggestions and evaluation logic
 
-Follow these steps:
+💡 Custom prompts built for ed-tech use cases
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+🛠️ How to Run This Project Locally
+⚙️ Prerequisites
+Node.js & npm
+
+A Supabase Project (for DB & Auth)
+
+Gemini API Key & OpenAI API Key
+
+📦 Installation Steps
+bash
+Copy
+Edit
+# 1️⃣ Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# 2️⃣ Navigate into the project directory
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3️⃣ Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4️⃣ Add your environment variables
+touch .env
+# Add your Supabase, Gemini, and OpenAI keys
+
+# 5️⃣ Start the development server
 npm run dev
-```
+🔑 Environment Variables (.env)
+env
+Copy
+Edit
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
 
-**Edit a file directly in GitHub**
+VITE_GEMINI_API_KEY=your_gemini_flash_2_key
+VITE_OPENAI_API_KEY=your_openai_key
+🧱 Tech Stack
+🔧 Vite
+🔡 TypeScript
+⚛️ React
+🎨 Tailwind CSS
+🧩 shadcn-ui
+🛢️ Supabase
+🤖 Gemini Flash 2.0
+🧠 OpenAI API
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+✏️ Editing in GitHub
+Navigate to the file you want to edit
 
-**Use GitHub Codespaces**
+Click the 🖉 Edit icon
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Make your changes
 
-## What technologies are used for this project?
+✅ Commit your changes
 
-This project is built with:
+💻 GitHub Codespaces (Optional)
+Go to your GitHub repo
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Click the green Code button
 
-## How can I deploy this project?
+Select Codespaces → New Codespace
 
-Simply open [Lovable](https://lovable.dev/projects/5c58f756-afe0-42e7-a31f-81f4aa103520) and click on Share -> Publish.
+Start editing instantly 🚀
 
-## Can I connect a custom domain to my Lovable project?
+🚀 Deployment
+✅ Hosted on Netlify at:
+🔗 https://scolarit.netlify.app/
 
-Yes it is!
+To deploy:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+bash
+Copy
+Edit
+npm run build
+Then push to Netlify or link your GitHub repo for continuous deployment.
