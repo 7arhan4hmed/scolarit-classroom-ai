@@ -7,67 +7,50 @@
 🧠 Team Lead: Md Farhan
 👩‍💻 Team Member: Yashwi Panday
 
-🧠 Core Integrations
-🛢️ Supabase (Database & Auth)
-Realtime database with PostgreSQL
+## How can I edit this code?
 
-⚙️ Authentication for users (students & teachers)
+There are several ways of editing your application.
 
-📦 Storage for assignments and submissions
+**Use your preferred IDE**
 
-🔐 Row-level security enabled
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-🤖 Gemini Flash 2.0 (by Google)
-✨ Used for intelligent content generation and summarization
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-📚 AI-assisted feedback for assignments and answers
+Follow these steps:
 
-💬 Natural language understanding & teaching assistant features
-
-🧠 OpenAI API
-🚀 GPT integration for chat & guidance
-
-✅ Used for AI-based answer suggestions and evaluation logic
-
-💡 Custom prompts built for ed-tech use cases
-
-🛠️ How to Run This Project Locally
-⚙️ Prerequisites
-Node.js & npm
-
-A Supabase Project (for DB & Auth)
-
-Gemini API Key & OpenAI API Key
-
-📦 Installation Steps
-bash
-Copy
-Edit
-# 1️⃣ Clone the repository
+```sh
+# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
 
-# 2️⃣ Navigate into the project directory
+# Step 2: Navigate to the project directory.
 cd <YOUR_PROJECT_NAME>
 
-# 3️⃣ Install dependencies
-npm install
+# Step 3: Install the necessary dependencies.
+npm i
 
-# 4️⃣ Add your environment variables
-touch .env
-# Add your Supabase, Gemini, and OpenAI keys
-
-# 5️⃣ Start the development server
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
-🔑 Environment Variables (.env)
-env
-Copy
-Edit
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
+```
 
-VITE_GEMINI_API_KEY=your_gemini_flash_2_key
-VITE_OPENAI_API_KEY=your_openai_key
-🧱 Tech Stack
+**Edit a file directly in GitHub**
+
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
+
+**Use GitHub Codespaces**
+
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
+
+## What technologies are used for this project?
+
+This project is built with:
+
 🔧 Vite
 🔡 TypeScript
 ⚛️ React
@@ -77,32 +60,8 @@ VITE_OPENAI_API_KEY=your_openai_key
 🤖 Gemini Flash 2.0
 🧠 OpenAI API
 
-✏️ Editing in GitHub
-Navigate to the file you want to edit
-
-Click the 🖉 Edit icon
-
-Make your changes
-
-✅ Commit your changes
-
-💻 GitHub Codespaces (Optional)
-Go to your GitHub repo
-
-Click the green Code button
-
-Select Codespaces → New Codespace
-
-Start editing instantly 🚀
+## How can I deploy this project?
 
 🚀 Deployment
 ✅ Hosted on Netlify at:
 🔗 https://scolarit.netlify.app/
-
-To deploy:
-
-bash
-Copy
-Edit
-npm run build
-Then push to Netlify or link your GitHub repo for continuous deployment.
