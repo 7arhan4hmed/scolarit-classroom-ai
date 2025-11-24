@@ -1,8 +1,18 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare } from 'lucide-react';
+import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -15,7 +25,58 @@ import { cn } from '@/lib/utils';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const location = useLocation();
+
+  useEffect(() => {
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        fetchProfile(session.user.id);
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      setUser(session.user);
+      await fetchProfile(session.user.id);
+    }
+  };
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (data) {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <header className="border-b sticky top-0 bg-white z-50">
@@ -119,19 +180,66 @@ const Header = () => {
           </Button>
         </div>
         
-        {/* Login/Signup Buttons */}
+        {/* Login/Signup or User Menu */}
         <div className="hidden md:flex items-center gap-4">
-          <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
-            <Link to="/login">
-              <UserCheck className="mr-2 h-4 w-4" />
-              Log in
-            </Link>
-          </Button>
-          <Button className="blue-purple-gradient hover:opacity-90" asChild>
-            <Link to="/signup">
-              Try for free
-            </Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                      {profile?.full_name ? getInitials(profile.full_name) : <User className="h-5 w-5" />}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{profile?.full_name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard" className="cursor-pointer">
+                    Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer">
+                    Profile Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="cursor-pointer text-red-600"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    localStorage.removeItem('user');
+                    window.location.href = '/';
+                  }}
+                >
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                <Link to="/login">
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Log in
+                </Link>
+              </Button>
+              <Button className="blue-purple-gradient hover:opacity-90" asChild>
+                <Link to="/signup">
+                  Try for free
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
       
@@ -207,16 +315,63 @@ const Header = () => {
               </Link>
             </div>
             <div className="flex flex-col gap-2 pt-2 border-t">
-              <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                  Log in
-                </Link>
-              </Button>
-              <Button className="blue-purple-gradient hover:opacity-90" asChild>
-                <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
-                  Try for free
-                </Link>
-              </Button>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-md">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm">
+                        {profile?.full_name ? getInitials(profile.full_name) : <User className="h-4 w-4" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{profile?.full_name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <Link 
+                    to="/dashboard" 
+                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Home className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    <span>Profile Settings</span>
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      localStorage.removeItem('user');
+                      setMobileMenuOpen(false);
+                      window.location.href = '/';
+                    }}
+                  >
+                    Log out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" className="text-brand-blue border-brand-blue hover:bg-brand-blue/10" asChild>
+                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                      Log in
+                    </Link>
+                  </Button>
+                  <Button className="blue-purple-gradient hover:opacity-90" asChild>
+                    <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>
+                      Try for free
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
