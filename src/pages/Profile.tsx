@@ -10,18 +10,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Mail, BookOpen, Upload, Loader2, LogOut } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { User, Mail, BookOpen, Upload, Loader2, LogOut, Lock, Camera } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     bio: '',
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -182,6 +189,58 @@ const Profile = () => {
     }
   };
 
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'New passwords do not match.',
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Password must be at least 6 characters long.',
+      });
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) throw error;
+
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'Password updated successfully.',
+      });
+    } catch (error: any) {
+      console.error('Error updating password:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to update password.',
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -223,138 +282,169 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-muted/30">
       <Header />
-      <main className="flex-grow bg-gray-50 py-8">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-[#005558]">My Profile</h1>
-            <p className="text-gray-500 mt-1">Manage your account information</p>
+      <main className="flex-grow py-12">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Header Section */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-[#005558] mb-2">Account Settings</h1>
+            <p className="text-muted-foreground">Manage your profile and account preferences</p>
           </div>
 
-          <div className="grid gap-6">
-            {/* Profile Overview Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Picture</CardTitle>
-                <CardDescription>Upload a profile picture to personalize your account</CardDescription>
+          <div className="grid gap-8">
+            {/* Profile Picture Section - Premium Design */}
+            <Card className="overflow-hidden border-border/50 shadow-sm">
+              <CardHeader className="border-b bg-card">
+                <CardTitle className="text-xl">Profile Picture</CardTitle>
+                <CardDescription>Your profile photo appears across the platform</CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-col md:flex-row items-center gap-6">
-                <div className="relative">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
-                    <AvatarFallback className="text-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                      {profile?.full_name ? getInitials(profile.full_name) : <User />}
-                    </AvatarFallback>
-                  </Avatar>
-                  {uploadingAvatar && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
-                      <Loader2 className="h-6 w-6 animate-spin text-white" />
+              <CardContent className="p-8">
+                <div className="flex flex-col sm:flex-row items-center gap-8">
+                  <div className="relative group">
+                    <Avatar className="h-32 w-32 ring-4 ring-border shadow-lg">
+                      <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                      <AvatarFallback className="text-3xl bg-gradient-to-br from-[#005558] to-[#007a7e] text-white">
+                        {profile?.full_name ? getInitials(profile.full_name) : <User className="h-12 w-12" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    {!uploadingAvatar && (
+                      <button
+                        onClick={() => document.getElementById('avatar-upload')?.click()}
+                        className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      >
+                        <Camera className="h-8 w-8 text-white" />
+                      </button>
+                    )}
+                    {uploadingAvatar && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full">
+                        <Loader2 className="h-8 w-8 animate-spin text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 text-center sm:text-left space-y-4">
+                    <div>
+                      <p className="font-medium text-foreground mb-1">Upload a new photo</p>
+                      <p className="text-sm text-muted-foreground">
+                        JPG, PNG or WEBP • Maximum size 2MB
+                      </p>
                     </div>
-                  )}
-                </div>
-                <div className="flex-1 text-center md:text-left">
-                  <p className="text-sm text-gray-600 mb-3">
-                    JPG, PNG or WEBP. Max size 2MB.
-                  </p>
-                  <div>
-                    <Input
-                      type="file"
-                      id="avatar-upload"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      disabled={uploadingAvatar}
-                      className="hidden"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => document.getElementById('avatar-upload')?.click()}
-                      disabled={uploadingAvatar}
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {uploadingAvatar ? 'Uploading...' : 'Upload Picture'}
-                    </Button>
+                    <div className="flex gap-3">
+                      <Input
+                        type="file"
+                        id="avatar-upload"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        disabled={uploadingAvatar}
+                        className="hidden"
+                      />
+                      <Button
+                        variant="default"
+                        onClick={() => document.getElementById('avatar-upload')?.click()}
+                        disabled={uploadingAvatar}
+                        className="bg-[#005558] hover:bg-[#004445]"
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Profile Information Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Update your personal information</CardDescription>
+            {/* Personal Information */}
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="border-b bg-card">
+                <CardTitle className="text-xl">Personal Information</CardTitle>
+                <CardDescription>Update your personal details and bio</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                        <Input
-                          id="email"
-                          type="email"
-                          value={user?.email || ''}
-                          disabled
-                          className="pl-10 bg-gray-50"
-                        />
+                  <div className="grid gap-6">
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="full_name" className="text-sm font-medium">Full Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Input
+                            id="full_name"
+                            type="text"
+                            value={formData.full_name}
+                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                            placeholder="John Doe"
+                            className="pl-10"
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500">Email cannot be changed</p>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="user_type">Account Type</Label>
-                      <div className="flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-gray-400" />
-                        <Badge variant={profile?.user_type === 'teacher' ? 'default' : 'secondary'}>
-                          {profile?.user_type === 'teacher' ? 'Teacher' : 'Student'}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="full_name">Full Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                        <Input
-                          id="full_name"
-                          type="text"
-                          value={formData.full_name}
-                          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                          placeholder="Enter your full name"
-                          className="pl-10"
-                        />
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                          <Input
+                            id="email"
+                            type="email"
+                            value={user?.email || ''}
+                            disabled
+                            className="pl-10 bg-muted/50 cursor-not-allowed"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">Email cannot be modified</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="bio">Bio</Label>
+                      <Label htmlFor="user_type" className="text-sm font-medium">Account Type</Label>
+                      <Select value={profile?.user_type} disabled>
+                        <SelectTrigger className="w-full bg-muted/50 cursor-not-allowed">
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-muted-foreground" />
+                            <SelectValue />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="teacher">Teacher</SelectItem>
+                          <SelectItem value="student">Student</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Account type cannot be changed</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
                       <Textarea
                         id="bio"
                         value={formData.bio || ''}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        placeholder="Tell us about yourself..."
-                        rows={4}
+                        placeholder="Share a brief description about yourself, your interests, or teaching philosophy..."
+                        rows={5}
                         maxLength={500}
+                        className="resize-none"
                       />
-                      <p className="text-xs text-gray-500 text-right">
-                        {formData.bio?.length || 0}/500
-                      </p>
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-muted-foreground">
+                          Your bio will be visible to other users
+                        </p>
+                        <p className="text-xs text-muted-foreground font-medium">
+                          {formData.bio?.length || 0}/500
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
+                  <Separator />
+
+                  <div className="flex gap-3 pt-2">
                     <Button
                       type="submit"
                       disabled={updating}
-                      className="bg-[#005558] hover:bg-[#005558]/90"
+                      className="bg-[#005558] hover:bg-[#004445]"
                     >
                       {updating ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
+                          Saving Changes...
                         </>
                       ) : (
                         'Save Changes'
@@ -372,20 +462,85 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {/* Account Actions Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Actions</CardTitle>
-                <CardDescription>Manage your account</CardDescription>
+            {/* Security - Password Change */}
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="border-b bg-card">
+                <CardTitle className="text-xl">Security</CardTitle>
+                <CardDescription>Update your password to keep your account secure</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-8">
+                <form onSubmit={handlePasswordChange} className="space-y-6">
+                  <div className="grid gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                          placeholder="Enter new password"
+                          className="pl-10"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                          placeholder="Confirm new password"
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <Button
+                    type="submit"
+                    disabled={changingPassword || !passwordData.newPassword || !passwordData.confirmPassword}
+                    variant="default"
+                    className="bg-[#005558] hover:bg-[#004445]"
+                  >
+                    {changingPassword ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Updating Password...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="mr-2 h-4 w-4" />
+                        Update Password
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Account Actions */}
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="border-b bg-card">
+                <CardTitle className="text-xl">Account Actions</CardTitle>
+                <CardDescription>Manage your session and account access</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8">
                 <Button
                   variant="outline"
                   onClick={handleLogout}
-                  className="w-full md:w-auto"
+                  className="w-full sm:w-auto"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Log Out
+                  Sign Out
                 </Button>
               </CardContent>
             </Card>
