@@ -10,25 +10,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Mail, BookOpen, Upload, Loader2, LogOut, Lock, Camera } from 'lucide-react';
+import { User, Mail, BookOpen, Upload, Loader2, Camera } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import ProfileCompletionMeter from '@/components/profile/ProfileCompletionMeter';
+import SecuritySection from '@/components/profile/SecuritySection';
+import ConnectedAccountsSection from '@/components/profile/ConnectedAccountsSection';
+import NotificationsSection from '@/components/profile/NotificationsSection';
+import PrivacySection from '@/components/profile/PrivacySection';
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     bio: '',
-  });
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
   });
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -189,77 +188,6 @@ const Profile = () => {
     }
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'New passwords do not match.',
-      });
-      return;
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Password must be at least 6 characters long.',
-      });
-      return;
-    }
-
-    setChangingPassword(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.newPassword
-      });
-
-      if (error) throw error;
-
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      
-      toast({
-        title: 'Success',
-        description: 'Password updated successfully.',
-      });
-    } catch (error: any) {
-      console.error('Error updating password:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Failed to update password.',
-      });
-    } finally {
-      setChangingPassword(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      localStorage.removeItem('user');
-      toast({
-        title: 'Logged out',
-        description: 'You have been logged out successfully.',
-      });
-      navigate('/');
-    } catch (error) {
-      console.error('Error logging out:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to log out.',
-      });
-    }
-  };
-
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -292,7 +220,10 @@ const Profile = () => {
             <p className="text-muted-foreground">Manage your profile and account preferences</p>
           </div>
 
-          <div className="grid gap-8">
+          <div className="grid gap-6">
+            {/* Profile Completion Meter */}
+            <ProfileCompletionMeter profile={profile} user={user} />
+
             {/* Profile Picture Section - Premium Design */}
             <Card className="overflow-hidden border-border/50 shadow-sm">
               <CardHeader className="border-b bg-card">
@@ -462,88 +393,17 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {/* Security - Password Change */}
-            <Card className="border-border/50 shadow-sm">
-              <CardHeader className="border-b bg-card">
-                <CardTitle className="text-xl">Security</CardTitle>
-                <CardDescription>Update your password to keep your account secure</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <form onSubmit={handlePasswordChange} className="space-y-6">
-                  <div className="grid gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input
-                          id="newPassword"
-                          type="password"
-                          value={passwordData.newPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                          placeholder="Enter new password"
-                          className="pl-10"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
-                    </div>
+            {/* Security Section */}
+            <SecuritySection user={user} />
 
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                        <Input
-                          id="confirmPassword"
-                          type="password"
-                          value={passwordData.confirmPassword}
-                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                          placeholder="Confirm new password"
-                          className="pl-10"
-                        />
-                      </div>
-                    </div>
-                  </div>
+            {/* Connected Accounts */}
+            <ConnectedAccountsSection user={user} />
 
-                  <Separator />
+            {/* Notifications */}
+            <NotificationsSection userId={user.id} />
 
-                  <Button
-                    type="submit"
-                    disabled={changingPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-                    variant="default"
-                    className="bg-[#005558] hover:bg-[#004445]"
-                  >
-                    {changingPassword ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Updating Password...
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="mr-2 h-4 w-4" />
-                        Update Password
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-
-            {/* Account Actions */}
-            <Card className="border-border/50 shadow-sm">
-              <CardHeader className="border-b bg-card">
-                <CardTitle className="text-xl">Account Actions</CardTitle>
-                <CardDescription>Manage your session and account access</CardDescription>
-              </CardHeader>
-              <CardContent className="p-8">
-                <Button
-                  variant="outline"
-                  onClick={handleLogout}
-                  className="w-full sm:w-auto"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Privacy & Account */}
+            <PrivacySection user={user} />
           </div>
         </div>
       </main>
