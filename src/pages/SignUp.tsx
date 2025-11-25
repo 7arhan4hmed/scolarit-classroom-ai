@@ -54,6 +54,7 @@ const SignUp = () => {
         email: values.email,
         password: values.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             full_name: values.name,
             user_type: userType
