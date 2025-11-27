@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignments: {
+        Row: {
+          content: string | null
+          created_at: string
+          feedback: string | null
+          grade: number | null
+          id: string
+          status: string
+          student_name: string | null
+          teacher_id: string
+          time_saved_minutes: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          feedback?: string | null
+          grade?: number | null
+          id?: string
+          status?: string
+          student_name?: string | null
+          teacher_id: string
+          time_saved_minutes?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          feedback?: string | null
+          grade?: number | null
+          id?: string
+          status?: string
+          student_name?: string | null
+          teacher_id?: string
+          time_saved_minutes?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

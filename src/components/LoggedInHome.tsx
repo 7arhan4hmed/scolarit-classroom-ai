@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, BarChart3, MessageSquare, Grid3x3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { DashboardStats } from '@/components/dashboard/DashboardStats';
 
 interface LoggedInHomeProps {
   userName?: string;
@@ -78,28 +79,11 @@ const LoggedInHome = ({ userName }: LoggedInHomeProps) => {
 
           {/* Recent Activity Section */}
           <div className="mt-12">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Stats</CardTitle>
-                <CardDescription>Your activity at a glance</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold blue-purple-text">--</div>
-                    <p className="text-sm text-muted-foreground mt-1">Assignments This Week</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold blue-purple-text">--</div>
-                    <p className="text-sm text-muted-foreground mt-1">Hours Saved</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold blue-purple-text">--</div>
-                    <p className="text-sm text-muted-foreground mt-1">Average Grade</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="mb-4">
+              <h2 className="text-2xl font-bold">Quick Stats</h2>
+              <p className="text-muted-foreground">Your activity at a glance</p>
+            </div>
+            <DashboardStats />
           </div>
 
           {/* Help Section */}
