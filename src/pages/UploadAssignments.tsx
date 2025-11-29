@@ -96,13 +96,59 @@ const UploadAssignments = () => {
     }
   };
   
-  const handleApprove = () => {
-    // Here we would normally save to database
-    toast({
-      title: "Assessment approved",
-      description: "The assessment has been saved to your dashboard.",
-    });
-    navigate('/dashboard');
+  const handleApprove = async () => {
+    if (!assessment) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to save assignments.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert letter grade to numeric (simplified conversion)
+      const gradeMap: { [key: string]: number } = {
+        'A+': 97, 'A': 93, 'A-': 90,
+        'B+': 87, 'B': 83, 'B-': 80,
+        'C+': 77, 'C': 73, 'C-': 70,
+        'D+': 67, 'D': 63, 'D-': 60,
+        'F': 50
+      };
+      
+      const numericGrade = gradeMap[assessment.grade] || null;
+
+      const { error } = await supabase
+        .from('assignments')
+        .insert({
+          teacher_id: user.id,
+          title: title,
+          content: textInput || null,
+          grade: numericGrade,
+          feedback: assessment.feedback,
+          status: 'completed',
+          time_saved_minutes: 15 // Estimate 15 minutes saved per assignment
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Assessment saved",
+        description: "The assessment has been saved to your dashboard.",
+      });
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Error saving assignment:", error);
+      toast({
+        title: "Failed to save",
+        description: error instanceof Error ? error.message : "An error occurred while saving the assignment.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleReset = () => {
