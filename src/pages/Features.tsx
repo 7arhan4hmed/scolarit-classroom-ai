@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Bot, MessageSquare, ClipboardCheck, Upload, BarChart3, Link2, Shield } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import FeatureTour from '@/components/features/FeatureTour';
 
 const features = [
   {
@@ -59,6 +60,9 @@ const Features = () => {
             </p>
           </div>
         </section>
+
+        {/* Interactive Feature Tour */}
+        <FeatureTour />
 
         {/* Features Grid */}
         <section className="py-16 bg-muted/30">
