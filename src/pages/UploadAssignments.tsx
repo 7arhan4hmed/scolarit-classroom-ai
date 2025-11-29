@@ -45,37 +45,38 @@ const UploadAssignments = () => {
     setStep('assessment');
     
     try {
-      // If file is uploaded, we would process it here
-      // For now, we'll just use the text input for AI assessment
-      const contentToAssess = textInput.trim();
-      
-      if (contentToAssess) {
-        const { data, error } = await supabase.functions.invoke('generate-ai-feedback', {
-          body: {
-            assignmentText: contentToAssess,
-            assignmentTitle: title
-          }
+      let fileData = null;
+      let fileType = null;
+
+      // If file is uploaded, convert it to base64
+      if (file) {
+        fileData = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
         });
-        
-        if (error) {
-          throw new Error(`Error generating AI feedback: ${error.message}`);
+        fileType = file.type;
+      }
+
+      const { data, error } = await supabase.functions.invoke('generate-ai-feedback', {
+        body: {
+          assignmentText: textInput.trim(),
+          assignmentTitle: title,
+          fileData,
+          fileType
         }
-        
-        if (data) {
-          setAssessment({
-            grade: data.grade || 'N/A',
-            feedback: data.feedback || 'No feedback provided'
-          });
-        }
-      } else if (file) {
-        // For files, we would normally extract text or handle differently
-        // For now, we'll just provide a simulated response
-        setTimeout(() => {
-          setAssessment({
-            grade: "B+",
-            feedback: "This analysis shows good understanding of the subject matter. Consider adding more specific examples and improving the transitions between sections."
-          });
-        }, 2000);
+      });
+      
+      if (error) {
+        throw new Error(`Error generating AI feedback: ${error.message}`);
+      }
+      
+      if (data) {
+        setAssessment({
+          grade: data.grade || 'N/A',
+          feedback: data.feedback || 'No feedback provided'
+        });
       }
       
       setStep('review');
@@ -127,7 +128,7 @@ const UploadAssignments = () => {
         .insert({
           teacher_id: user.id,
           title: title,
-          content: textInput || null,
+          content: textInput || (file ? `[File uploaded: ${file.name}]` : null),
           grade: numericGrade,
           feedback: assessment.feedback,
           status: 'completed',
