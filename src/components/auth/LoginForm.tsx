@@ -41,7 +41,6 @@ const LoginForm = ({ userType }: LoginFormProps) => {
     setIsLoading(true);
     
     try {
-      // Use Supabase's auth.signInWithPassword method to sign in the user
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
@@ -56,6 +55,8 @@ const LoginForm = ({ userType }: LoginFormProps) => {
       const actualUserType = userMetadata?.user_type || 'student';
       
       if (actualUserType !== userType) {
+        // Sign out if user type doesn't match
+        await supabase.auth.signOut();
         toast({
           variant: "destructive",
           title: "Login failed",
@@ -65,18 +66,12 @@ const LoginForm = ({ userType }: LoginFormProps) => {
         return;
       }
       
-      // Still set localStorage for backward compatibility with other parts of the app
-      localStorage.setItem('user', JSON.stringify({ 
-        email: values.email, 
-        type: actualUserType,
-        name: userMetadata?.full_name || ''
-      }));
-      
       toast({
         title: "Login successful",
         description: `Welcome back to SCOLARIT, ${userMetadata?.full_name || ''}!`,
       });
       
+      // Navigate to dashboard - the session is automatically persisted by Supabase
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);

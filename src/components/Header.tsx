@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -25,33 +26,17 @@ import { cn } from '@/lib/utils';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        fetchProfile(session.user.id);
-      } else {
-        setUser(null);
-        setProfile(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setUser(session.user);
-      await fetchProfile(session.user.id);
+    if (user) {
+      fetchProfile(user.id);
+    } else {
+      setProfile(null);
     }
-  };
+  }, [user]);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -216,8 +201,7 @@ const Header = () => {
                 <DropdownMenuItem 
                   className="cursor-pointer text-red-600"
                   onClick={async () => {
-                    await supabase.auth.signOut();
-                    localStorage.removeItem('user');
+                    await signOut();
                     window.location.href = '/';
                   }}
                 >
@@ -349,8 +333,7 @@ const Header = () => {
                     variant="outline" 
                     className="text-red-600 border-red-600 hover:bg-red-50"
                     onClick={async () => {
-                      await supabase.auth.signOut();
-                      localStorage.removeItem('user');
+                      await signOut();
                       setMobileMenuOpen(false);
                       window.location.href = '/';
                     }}
