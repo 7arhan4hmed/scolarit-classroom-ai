@@ -10,59 +10,51 @@ import StepIndicator from '@/components/upload/StepIndicator';
 import UploadStep from '@/components/upload/UploadStep';
 import AssessmentStep from '@/components/upload/AssessmentStep';
 import ReviewStep from '@/components/upload/ReviewStep';
-import { Upload } from 'lucide-react';
+
+interface FileWithValidation {
+  file: File;
+  id: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  error?: string;
+  progress?: number;
+}
 
 const UploadAssignments = () => {
   const [step, setStep] = useState<'upload' | 'assessment' | 'review'>('upload');
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<FileWithValidation[]>([]);
   const [textInput, setTextInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [assessment, setAssessment] = useState<{ grade: string; feedback: string } | null>(null);
   const [title, setTitle] = useState('');
+  const [rubricId, setRubricId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   
   const handleSubmit = async () => {
-    if (!textInput.trim() && !file) {
-      toast({
-        title: "Missing content",
-        description: "Please upload a file or enter text to submit for assessment.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!title.trim()) {
-      toast({
-        title: "Missing title",
-        description: "Please enter a title for your assignment.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     setStep('assessment');
     
     try {
+      // Process first file if available (for now, batch processing would be future enhancement)
       let fileData = null;
       let fileType = null;
 
-      // If file is uploaded, convert it to base64
-      if (file) {
+      if (files.length > 0) {
+        const firstFile = files[0].file;
         fileData = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = reject;
-          reader.readAsDataURL(file);
+          reader.readAsDataURL(firstFile);
         });
-        fileType = file.type;
+        fileType = firstFile.type;
       }
 
       const { data, error } = await supabase.functions.invoke('generate-ai-feedback', {
         body: {
           assignmentText: textInput.trim(),
           assignmentTitle: title,
+          rubricId: rubricId,
           fileData,
           fileType
         }
@@ -82,7 +74,7 @@ const UploadAssignments = () => {
       setStep('review');
       toast({
         title: "Assessment complete",
-        description: "Your assignment has been assessed.",
+        description: `Your assignment "${title}" has been graded.`,
       });
     } catch (error) {
       console.error("Error during assessment:", error);
@@ -123,16 +115,19 @@ const UploadAssignments = () => {
       
       const numericGrade = gradeMap[assessment.grade] || null;
 
+      const fileNames = files.map(f => f.file.name).join(', ');
+      const contentDescription = textInput || (files.length > 0 ? `[Files: ${fileNames}]` : null);
+
       const { error } = await supabase
         .from('assignments')
         .insert({
           teacher_id: user.id,
           title: title,
-          content: textInput || (file ? `[File uploaded: ${file.name}]` : null),
+          content: contentDescription,
           grade: numericGrade,
           feedback: assessment.feedback,
           status: 'completed',
-          time_saved_minutes: 15 // Estimate 15 minutes saved per assignment
+          time_saved_minutes: 15 * files.length || 15 // 15 minutes per file
         });
 
       if (error) throw error;
@@ -153,9 +148,10 @@ const UploadAssignments = () => {
   };
   
   const handleReset = () => {
-    setFile(null);
+    setFiles([]);
     setTextInput('');
     setTitle('');
+    setRubricId(null);
     setAssessment(null);
     setStep('upload');
   };
@@ -179,8 +175,10 @@ const UploadAssignments = () => {
                   setTitle={setTitle}
                   textInput={textInput}
                   setTextInput={setTextInput}
-                  file={file}
-                  setFile={setFile}
+                  files={files}
+                  setFiles={setFiles}
+                  rubricId={rubricId}
+                  setRubricId={setRubricId}
                   onSubmit={handleSubmit}
                 />
               )}
