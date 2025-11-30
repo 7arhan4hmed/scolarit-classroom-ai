@@ -2,12 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/HeroSection';
-import ProblemsSection from '@/components/ProblemsSection';
 import SimpleFeaturesSection from '@/components/SimpleFeaturesSection';
 import AIDemoSection from '@/components/AIDemoSection';
 import SimpleHowItWorksSection from '@/components/SimpleHowItWorksSection';
 import IntegrationsSection from '@/components/IntegrationsSection';
-import CtaSection from '@/components/CtaSection';
 import LoggedInHome from '@/components/LoggedInHome';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -77,12 +75,10 @@ const Index = () => {
         ) : (
           <>
             <HeroSection />
-            <ProblemsSection />
             <AIDemoSection />
             <SimpleFeaturesSection />
             <SimpleHowItWorksSection />
             <IntegrationsSection />
-            <CtaSection />
           </>
         )}
       </main>

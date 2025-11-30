@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, Sparkles, BookOpen, GraduationCap, Zap, Award, BarChart, Users } from 'lucide-react';
+import { ArrowRight, Sparkles, BookOpen, GraduationCap, Zap } from 'lucide-react';
 import AssessmentCard from './AssessmentCard';
 import { Link } from 'react-router-dom';
-import { BackgroundCellsDemo } from './ui/background-cells';
 
 const HeroSection = () => {
   return (
@@ -47,7 +46,7 @@ const HeroSection = () => {
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
               <Button size="lg" className="blue-purple-gradient hover:opacity-90 animate-fade-in" asChild>
                 <Link to="/signup">
-                  Start Free Trial
+                  Get Started
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -56,21 +55,6 @@ const HeroSection = () => {
                   How It Works
                 </Link>
               </Button>
-            </div>
-            
-            <div className="pt-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-                <span className="text-sm">No credit card required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-                <span className="text-sm">14-day free trial</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-                <span className="text-sm">Cancel anytime</span>
-              </div>
             </div>
           </div>
           
@@ -83,45 +67,6 @@ const HeroSection = () => {
           </div>
         </div>
         
-        {/* Statistics section */}
-        <div className="mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-600/10 text-center hover:border-purple-500/20 transition-colors">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-blue-600/10 to-purple-500/10 mb-4">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-            <h3 className="text-3xl font-bold blue-purple-text">10,000+</h3>
-            <p className="text-sm text-gray-500 mt-1">Educators Using SCOLARIT</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-600/10 text-center hover:border-purple-500/20 transition-colors">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-blue-600/10 to-purple-500/10 mb-4">
-              <BookOpen className="h-6 w-6 text-purple-500" />
-            </div>
-            <h3 className="text-3xl font-bold blue-purple-text">500,000+</h3>
-            <p className="text-sm text-gray-500 mt-1">Assignments Processed</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-600/10 text-center hover:border-purple-500/20 transition-colors">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-blue-600/10 to-purple-500/10 mb-4">
-              <BarChart className="h-6 w-6 text-blue-600" />
-            </div>
-            <h3 className="text-3xl font-bold blue-purple-text">98%</h3>
-            <p className="text-sm text-gray-500 mt-1">Accuracy Rate</p>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-600/10 text-center hover:border-purple-500/20 transition-colors">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-blue-600/10 to-purple-500/10 mb-4">
-              <Award className="h-6 w-6 text-purple-500" />
-            </div>
-            <h3 className="text-3xl font-bold blue-purple-text">25+</h3>
-            <p className="text-sm text-gray-500 mt-1">Education Awards</p>
-          </div>
-        </div>
-        
-        {/* Background Cells Demo Section */}
-        <div className="mt-16 rounded-xl overflow-hidden shadow-lg border border-blue-600/10">
-          <BackgroundCellsDemo />
-        </div>
       </div>
     </section>
   );
