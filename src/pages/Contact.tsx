@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Select,
   SelectContent,
@@ -13,217 +14,276 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, Phone, MapPin, MessageSquare } from 'lucide-react';
+import { Mail, MessageSquare, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { z } from 'zod';
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
+  category: z.enum(['technical', 'billing', 'feedback', 'feature'], {
+    required_error: "Please select a category",
+  }),
+  message: z.string().trim().min(10, "Message must be at least 10 characters").max(2000, "Message must be less than 2000 characters"),
+});
 
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: '',
+    category: '',
     message: '',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
+  const [success, setSuccess] = useState(false);
   const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    setSuccess(false);
   };
 
-  const handleSubjectChange = (value: string) => {
-    setFormData(prev => ({ ...prev, subject: value }));
+  const handleCategoryChange = (value: string) => {
+    setFormData(prev => ({ ...prev, category: value }));
+    if (errors.category) {
+      setErrors(prev => ({ ...prev, category: '' }));
+    }
+    setSuccess(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    setSuccess(false);
+    
+    // Validate form data
+    const result = contactSchema.safeParse(formData);
+    
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((error) => {
+        if (error.path[0]) {
+          fieldErrors[error.path[0].toString()] = error.message;
+        }
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+    
     setSending(true);
     
     // Simulate form submission
     setTimeout(() => {
       setSending(false);
+      setSuccess(true);
       toast({
-        title: "Message Sent",
-        description: "Thank you! We've received your message and will get back to you shortly.",
+        title: "Message Sent Successfully!",
+        description: "Thank you for contacting us. We'll get back to you within 24 hours.",
       });
       setFormData({
         name: '',
         email: '',
-        subject: '',
+        category: '',
         message: '',
       });
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => setSuccess(false), 5000);
     }, 1500);
   };
 
+  const categoryLabels: Record<string, string> = {
+    technical: 'Technical Issue',
+    billing: 'Billing Question',
+    feedback: 'General Feedback',
+    feature: 'Feature Request',
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="flex-grow">
-        <section className="py-12 md:py-20 bg-gradient-to-b from-white to-blue-600/5">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center mb-12">
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">Contact Us</h1>
-              <p className="text-lg text-gray-600">
-                Have questions about SCOLARIT? Our team is here to help!
-              </p>
+      <main className="flex-grow py-12 md:py-20">
+        <div className="container mx-auto px-4 max-w-5xl">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">Contact Us</h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Have questions about SCOLARIT? We're here to help. Send us a message and we'll respond within 24 hours.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Contact Form */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Send us a message</CardTitle>
+                  <CardDescription>Fill out the form below and we'll get back to you as soon as possible.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {/* Success Message */}
+                  {success && (
+                    <Alert className="mb-6 bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <AlertDescription className="text-green-800 dark:text-green-200">
+                        Your message has been sent successfully! We'll get back to you within 24 hours.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Name Field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Name *</Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Your full name"
+                        className={errors.name ? 'border-destructive' : ''}
+                      />
+                      {errors.name && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {errors.name}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Email Field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="your.email@example.com"
+                        className={errors.email ? 'border-destructive' : ''}
+                      />
+                      {errors.email && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {errors.email}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Category Field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category *</Label>
+                      <Select value={formData.category} onValueChange={handleCategoryChange}>
+                        <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="technical">Technical Issue</SelectItem>
+                          <SelectItem value="billing">Billing Question</SelectItem>
+                          <SelectItem value="feedback">General Feedback</SelectItem>
+                          <SelectItem value="feature">Feature Request</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.category && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {errors.category}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Message Field */}
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Message *</Label>
+                      <Textarea
+                        id="message"
+                        name="message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Tell us more about your inquiry..."
+                        className={`min-h-32 ${errors.message ? 'border-destructive' : ''}`}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {formData.message.length}/2000 characters
+                      </p>
+                      {errors.message && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {errors.message}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Submit Button */}
+                    <Button 
+                      type="submit" 
+                      disabled={sending}
+                      className="w-full"
+                    >
+                      {sending ? (
+                        <>
+                          <span className="animate-pulse">Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          Send Message
+                          <MessageSquare className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-              <div className="bg-white rounded-xl border border-blue-600/20 p-6 shadow-sm flex flex-col items-center text-center">
-                <div className="w-12 h-12 blue-purple-gradient rounded-full flex items-center justify-center mb-4">
-                  <Mail className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Email</h3>
-                <p className="text-gray-600 mb-4">Drop us a line anytime</p>
-                <a href="mailto:support@scolarit.com" className="text-rgb(37, 99, 235) font-medium hover:text-rgb(139, 92, 246)">
-                  support@scolarit.com
-                </a>
-              </div>
+            {/* Contact Information */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Contact Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Mail className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium mb-1">Email Support</p>
+                      <a 
+                        href="mailto:support@scolarit.com" 
+                        className="text-sm text-primary hover:underline"
+                      >
+                        support@scolarit.com
+                      </a>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        We respond within 24 hours
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="bg-white rounded-xl border border-blue-600/20 p-6 shadow-sm flex flex-col items-center text-center">
-                <div className="w-12 h-12 blue-purple-gradient rounded-full flex items-center justify-center mb-4">
-                  <Phone className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Phone</h3>
-                <p className="text-gray-600 mb-4">Mon-Fri, 9am-5pm EST</p>
-                <a href="tel:+1-800-SCOLARIT" className="text-rgb(37, 99, 235) font-medium hover:text-rgb(139, 92, 246)">
-                  +1-800-SCOLARIT
-                </a>
-              </div>
-
-              <div className="bg-white rounded-xl border border-blue-600/20 p-6 shadow-sm flex flex-col items-center text-center">
-                <div className="w-12 h-12 blue-purple-gradient rounded-full flex items-center justify-center mb-4">
-                  <MapPin className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Office</h3>
-                <p className="text-gray-600 mb-4">Visit our headquarters</p>
-                <address className="text-rgb(37, 99, 235) font-medium not-italic">
-                  123 Education Lane<br />
-                  San Francisco, CA 94105
-                </address>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-blue-600/20 p-8 shadow-sm max-w-3xl mx-auto">
-              <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
-              
-              <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 gap-6 mb-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Name
-                    </label>
-                    <Input
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="John Doe"
-                      required
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                      Email Address
-                    </label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="john@example.com"
-                      required
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                      Subject
-                    </label>
-                    <Select value={formData.subject} onValueChange={handleSubjectChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select subject" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="general">General Inquiry</SelectItem>
-                        <SelectItem value="demo">Request a Demo</SelectItem>
-                        <SelectItem value="support">Technical Support</SelectItem>
-                        <SelectItem value="billing">Billing Question</SelectItem>
-                        <SelectItem value="partnership">Partnership Opportunity</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                      Your Message
-                    </label>
-                    <Textarea
-                      id="message"
-                      name="message"
-                      value={formData.message}
-                      onChange={handleChange}
-                      placeholder="How can we help you?"
-                      required
-                      className="min-h-32 w-full"
-                    />
-                  </div>
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  disabled={sending}
-                  className="w-full md:w-auto blue-purple-gradient hover:opacity-90"
-                >
-                  {sending ? 'Sending...' : 'Send Message'}
-                  <MessageSquare className="ml-2 h-4 w-4" />
-                </Button>
-              </form>
+              <Card className="bg-muted/50">
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold mb-3">Need immediate help?</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Check out our comprehensive documentation and FAQ section for quick answers to common questions.
+                  </p>
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href="/how-it-works">View Documentation</a>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
-        </section>
-
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 gradient-text">Our Integration Partners</h2>
-              <p className="text-lg text-gray-600">
-                SCOLARIT seamlessly connects with all major learning management systems
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 justify-items-center items-center max-w-4xl mx-auto">
-              {/* These would be actual logos in a real implementation */}
-              <div className="flex flex-col items-center">
-                <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-white text-xl font-bold">G</span>
-                </div>
-                <span className="font-medium">Google Classroom</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="h-16 w-16 bg-red-600 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-white text-xl font-bold">C</span>
-                </div>
-                <span className="font-medium">Canvas</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="h-16 w-16 bg-orange-600 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-white text-xl font-bold">M</span>
-                </div>
-                <span className="font-medium">Moodle</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="h-16 w-16 bg-purple-600 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-white text-xl font-bold">B</span>
-                </div>
-                <span className="font-medium">Blackboard</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        </div>
       </main>
       <Footer />
     </div>
