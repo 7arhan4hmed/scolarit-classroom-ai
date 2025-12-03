@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import { User, Mail, BookOpen, Upload, Loader2, Camera } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
@@ -31,6 +32,7 @@ const Profile = () => {
   });
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { logActivity } = useActivityLog();
 
   useEffect(() => {
     checkUser();
@@ -171,6 +173,11 @@ const Profile = () => {
       if (error) throw error;
 
       setProfile({ ...profile, ...formData });
+      
+      // Log activity
+      await logActivity('profile_updated', 'profile', user.id, {
+        updated_fields: ['full_name', 'bio']
+      });
       
       toast({
         title: 'Success',
