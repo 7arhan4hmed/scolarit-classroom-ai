@@ -6,6 +6,8 @@ import Footer from '@/components/Footer';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useActivityLog } from '@/hooks/useActivityLog';
 import StepIndicator from '@/components/upload/StepIndicator';
 import UploadStep from '@/components/upload/UploadStep';
 import AssessmentStep from '@/components/upload/AssessmentStep';
@@ -29,6 +31,8 @@ const UploadAssignments = () => {
   const [rubricId, setRubricId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { logActivity } = useActivityLog();
   
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -93,9 +97,9 @@ const UploadAssignments = () => {
     if (!assessment) return;
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      if (!user) {
+      if (!currentUser) {
         toast({
           title: "Authentication required",
           description: "Please log in to save assignments.",
@@ -118,19 +122,43 @@ const UploadAssignments = () => {
       const fileNames = files.map(f => f.file.name).join(', ');
       const contentDescription = textInput || (files.length > 0 ? `[Files: ${fileNames}]` : null);
 
-      const { error } = await supabase
+      const { data: assignmentData, error } = await supabase
         .from('assignments')
         .insert({
-          teacher_id: user.id,
+          teacher_id: currentUser.id,
           title: title,
           content: contentDescription,
           grade: numericGrade,
           feedback: assessment.feedback,
           status: 'completed',
-          time_saved_minutes: 15 * files.length || 15 // 15 minutes per file
-        });
+          rubric_id: rubricId,
+          time_saved_minutes: 15 * files.length || 15
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Log file uploads
+      if (files.length > 0 && assignmentData) {
+        const fileUploads = files.map(f => ({
+          user_id: currentUser.id,
+          assignment_id: assignmentData.id,
+          file_name: f.file.name,
+          file_type: f.file.type,
+          file_size: f.file.size,
+          status: 'uploaded'
+        }));
+
+        await supabase.from('file_uploads').insert(fileUploads);
+      }
+
+      // Log activity
+      await logActivity('assignment_graded', 'assignment', assignmentData?.id, {
+        title,
+        grade: assessment.grade,
+        rubric_id: rubricId
+      });
 
       toast({
         title: "Assessment saved",

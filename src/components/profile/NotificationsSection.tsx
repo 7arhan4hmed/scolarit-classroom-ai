@@ -1,54 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Bell } from 'lucide-react';
+import { useUserSettings } from '@/hooks/useUserSettings';
+import { Bell, Loader2 } from 'lucide-react';
 
 interface NotificationsSectionProps {
   userId: string;
 }
 
 const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
-  const [preferences, setPreferences] = useState({
-    emailNotifications: true,
-    assignmentReminders: true,
-    gradeUpdates: true,
-    weeklyDigest: false,
-    marketingEmails: false,
-  });
+  const { settings, loading, updateSettings } = useUserSettings();
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadPreferences();
-  }, [userId]);
+  const handleToggle = async (key: 'email_notifications' | 'push_notifications' | 'grading_reminders') => {
+    if (!settings) return;
 
-  const loadPreferences = () => {
-    // Load from localStorage as a simple implementation
-    // In production, this would be stored in the database
-    const stored = localStorage.getItem(`notifications_${userId}`);
-    if (stored) {
-      setPreferences(JSON.parse(stored));
+    const result = await updateSettings({
+      [key]: !settings[key],
+    });
+
+    if (result.success) {
+      toast({
+        title: 'Preferences updated',
+        description: 'Your notification preferences have been saved.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update preferences.',
+      });
     }
   };
 
-  const handleToggle = (key: keyof typeof preferences) => {
-    const newPreferences = {
-      ...preferences,
-      [key]: !preferences[key],
-    };
-    setPreferences(newPreferences);
-    
-    // Save to localStorage
-    localStorage.setItem(`notifications_${userId}`, JSON.stringify(newPreferences));
-    
-    toast({
-      title: 'Preferences updated',
-      description: 'Your notification preferences have been saved.',
-    });
-  };
+  if (loading) {
+    return (
+      <Card className="border-border/50 shadow-sm">
+        <CardHeader className="border-b bg-card">
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Notifications
+          </CardTitle>
+          <CardDescription>Loading your notification preferences...</CardDescription>
+        </CardHeader>
+        <CardContent className="p-8 flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-border/50 shadow-sm">
@@ -70,8 +73,8 @@ const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
             </div>
             <Switch
               id="email-notifications"
-              checked={preferences.emailNotifications}
-              onCheckedChange={() => handleToggle('emailNotifications')}
+              checked={settings?.email_notifications ?? true}
+              onCheckedChange={() => handleToggle('email_notifications')}
             />
           </div>
 
@@ -79,15 +82,15 @@ const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="assignment-reminders" className="text-base">Assignment Reminders</Label>
+              <Label htmlFor="push-notifications" className="text-base">Push Notifications</Label>
               <p className="text-sm text-muted-foreground">
-                Get reminders for upcoming assignments
+                Receive browser push notifications
               </p>
             </div>
             <Switch
-              id="assignment-reminders"
-              checked={preferences.assignmentReminders}
-              onCheckedChange={() => handleToggle('assignmentReminders')}
+              id="push-notifications"
+              checked={settings?.push_notifications ?? true}
+              onCheckedChange={() => handleToggle('push_notifications')}
             />
           </div>
 
@@ -95,47 +98,15 @@ const NotificationsSection = ({ userId }: NotificationsSectionProps) => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="grade-updates" className="text-base">Grade Updates</Label>
+              <Label htmlFor="grading-reminders" className="text-base">Grading Reminders</Label>
               <p className="text-sm text-muted-foreground">
-                Notifications when grades are posted
+                Get reminders for pending assignments
               </p>
             </div>
             <Switch
-              id="grade-updates"
-              checked={preferences.gradeUpdates}
-              onCheckedChange={() => handleToggle('gradeUpdates')}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="weekly-digest" className="text-base">Weekly Digest</Label>
-              <p className="text-sm text-muted-foreground">
-                Receive a weekly summary of your activity
-              </p>
-            </div>
-            <Switch
-              id="weekly-digest"
-              checked={preferences.weeklyDigest}
-              onCheckedChange={() => handleToggle('weeklyDigest')}
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="marketing-emails" className="text-base">Marketing Emails</Label>
-              <p className="text-sm text-muted-foreground">
-                Receive updates about new features and tips
-              </p>
-            </div>
-            <Switch
-              id="marketing-emails"
-              checked={preferences.marketingEmails}
-              onCheckedChange={() => handleToggle('marketingEmails')}
+              id="grading-reminders"
+              checked={settings?.grading_reminders ?? true}
+              onCheckedChange={() => handleToggle('grading_reminders')}
             />
           </div>
         </div>

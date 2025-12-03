@@ -7,26 +7,27 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import TeacherProfileForm from '@/components/profile/TeacherProfileForm';
 import StudentProfileForm from '@/components/profile/StudentProfileForm';
-import { Shield, Lock, Database } from 'lucide-react';
+import { Shield, Lock, Database, Loader2 } from 'lucide-react';
 
 const ProfileSetup = () => {
   const [searchParams] = useSearchParams();
-  const userType = searchParams.get('type') || 'teacher';
+  const { user, loading: authLoading } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
   const [step, setStep] = useState(1);
   const [maxSteps, setMaxSteps] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // User data from local storage
-  const [userData, setUserData] = useState<any>(null);
-  
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
+    if (authLoading) return;
+    
+    if (!user) {
       toast({
         variant: "destructive",
         title: "Authentication required",
@@ -36,11 +37,29 @@ const ProfileSetup = () => {
       return;
     }
     
-    setUserData(JSON.parse(storedUser));
+    fetchProfile();
+  }, [user, authLoading, navigate, toast]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
     
-    // Set max steps based on user type
-    setMaxSteps(userType === 'teacher' ? 3 : 2);
-  }, [navigate, toast, userType]);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      
+      setProfile(data);
+      setMaxSteps(data?.user_type === 'teacher' ? 3 : 2);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setInitialLoading(false);
+    }
+  };
   
   const handleNext = () => {
     if (step < maxSteps) {
@@ -57,15 +76,18 @@ const ProfileSetup = () => {
   };
   
   const handleSubmit = async () => {
+    if (!user) return;
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update user profile complete status in local storage
-      const updatedUser = { ...userData, profileComplete: true };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Log activity
+      await supabase.from('activity_logs').insert({
+        user_id: user.id,
+        action: 'profile_updated',
+        entity_type: 'profile',
+        entity_id: user.id,
+        metadata: { completed_setup: true }
+      });
       
       toast({
         title: "Profile setup complete!",
@@ -89,9 +111,23 @@ const ProfileSetup = () => {
     return (step / maxSteps) * 100;
   };
   
-  if (!userData) {
-    return null; // Will redirect in useEffect
+  if (authLoading || initialLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
   }
+  
+  if (!user || !profile) {
+    return null;
+  }
+
+  const userType = profile.user_type || 'teacher';
   
   return (
     <div className="min-h-screen flex flex-col">
