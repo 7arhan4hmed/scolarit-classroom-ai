@@ -89,7 +89,7 @@ const SignUp = () => {
 
         <RoleToggle value={userType} onChange={setUserType} />
 
-        <div className="bg-white rounded-[14px] border border-[hsl(220,15%,92%)] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(0,0,0,0.06)] p-7 sm:p-8 space-y-5">
+        <div className="bg-white rounded-[14px] border border-[hsl(220,15%,92%)] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_-4px_rgba(0,0,0,0.06),0_24px_48px_-16px_rgba(15,23,42,0.08)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.04),0_8px_20px_-6px_rgba(0,0,0,0.08),0_32px_64px_-20px_rgba(15,23,42,0.12)] hover:scale-[1.005] transition-all duration-300 p-7 sm:p-8 space-y-5">
           <SocialButton
             onClick={() =>
               toast({ title: 'Coming soon', description: 'Google sign-up will be available shortly.' })
@@ -149,27 +149,35 @@ const SignUp = () => {
                 label="Confirm password"
               />
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-11 rounded-[10px] text-sm font-semibold text-white border-0 hover:-translate-y-[1px] transition-all duration-200"
-                style={{
-                  backgroundColor: accentColor,
-                  boxShadow: `0 4px 12px -2px ${accentColor}66`,
-                }}
-              >
-                {isLoading ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white mr-2" />
-                    Creating account...
-                  </>
-                ) : (
-                  <>
-                    Create account
-                    <ArrowRight size={16} className="ml-1.5" />
-                  </>
-                )}
-              </Button>
+              <div className="space-y-2 pt-1">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="group w-full h-11 rounded-[10px] text-sm font-semibold text-white border-0 hover:-translate-y-[1px] hover:shadow-[0_12px_28px_-6px_var(--glow),0_4px_12px_-2px_var(--glow)] active:translate-y-0 transition-all duration-200"
+                  style={{
+                    background: userType === 'teacher'
+                      ? 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)'
+                      : 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)',
+                    boxShadow: `0 6px 16px -4px ${accentColor}66, inset 0 1px 0 rgba(255,255,255,0.15)`,
+                    ['--glow' as any]: `${accentColor}80`,
+                  }}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white mr-2" />
+                      Creating account...
+                    </>
+                  ) : (
+                    <>
+                      Create account
+                      <ArrowRight size={16} className="ml-1.5 transition-transform group-hover:translate-x-0.5" />
+                    </>
+                  )}
+                </Button>
+                <p className="text-center text-[11px] text-[hsl(220,10%,55%)] font-medium">
+                  Free forever · No credit card required
+                </p>
+              </div>
             </form>
           </Form>
         </div>
@@ -181,9 +189,14 @@ const SignUp = () => {
               Sign in
             </Link>
           </p>
-          <div className="flex items-center justify-center gap-1.5 text-xs text-[hsl(220,10%,50%)] font-medium">
-            <ShieldCheck size={14} />
-            Your data is encrypted and secure.
+          <div className="flex items-center justify-center gap-2 text-xs text-[hsl(220,12%,38%)] font-semibold">
+            <div
+              className="rounded-full p-1"
+              style={{ background: `${accentColor}15`, color: accentColor }}
+            >
+              <ShieldCheck size={12} />
+            </div>
+            <span>256-bit encrypted · SOC 2 compliant</span>
           </div>
         </div>
       </div>
