@@ -5,7 +5,6 @@
 👥 Team
 👨‍💻 Team Name: Brackets & Bugs
 🧠 Team Lead: Md Farhan
-👩‍💻 Team Member: Yashwi Panday
 
 ## How can I edit this code?
 
