@@ -7,6 +7,7 @@ import SocialButton from '@/components/auth/SocialButton';
 import AuthLayout from '@/components/auth/AuthLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { signInWithGoogle } from '@/lib/googleAuth';
 
 const Login = () => {
   const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
@@ -47,12 +48,16 @@ const Login = () => {
         {/* Card */}
         <div className="bg-white rounded-[14px] border border-[hsl(220,15%,92%)] shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_-4px_rgba(0,0,0,0.06),0_24px_48px_-16px_rgba(15,23,42,0.08)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.04),0_8px_20px_-6px_rgba(0,0,0,0.08),0_32px_64px_-20px_rgba(15,23,42,0.12)] hover:scale-[1.005] transition-all duration-300 p-7 sm:p-8 space-y-5">
           <SocialButton
-            onClick={() =>
-              toast({
-                title: 'Coming soon',
-                description: 'Google sign-in will be available shortly.',
-              })
-            }
+            onClick={async () => {
+              const { error } = await signInWithGoogle(userType);
+              if (error) {
+                toast({
+                  variant: 'destructive',
+                  title: 'Google sign-in failed',
+                  description: error.message,
+                });
+              }
+            }}
           >
             Continue with Google
           </SocialButton>
