@@ -95,27 +95,35 @@ const LoginForm = ({ userType }: LoginFormProps) => {
           </div>
         </div>
 
-        <Button
-          type="submit"
-          disabled={isLoading}
-          className="w-full h-11 rounded-[10px] text-sm font-semibold text-white shadow-[0_4px_12px_-2px_var(--shadow)] hover:-translate-y-[1px] hover:shadow-[0_8px_20px_-4px_var(--shadow)] transition-all duration-200 border-0"
-          style={{
-            backgroundColor: accentColor,
-            ['--shadow' as any]: `${accentColor}66`,
-          }}
-        >
-          {isLoading ? (
-            <>
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white mr-2" />
-              Signing in...
-            </>
-          ) : (
-            <>
-              Sign in
-              <ArrowRight size={16} className="ml-1.5" />
-            </>
-          )}
-        </Button>
+        <div className="space-y-2 pt-1">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="group w-full h-11 rounded-[10px] text-sm font-semibold text-white border-0 hover:-translate-y-[1px] hover:shadow-[0_12px_28px_-6px_var(--glow),0_4px_12px_-2px_var(--glow)] active:translate-y-0 transition-all duration-200"
+            style={{
+              background: userType === 'teacher'
+                ? 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)'
+                : 'linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%)',
+              boxShadow: `0 6px 16px -4px ${accentColor}66, inset 0 1px 0 rgba(255,255,255,0.15)`,
+              ['--glow' as any]: `${accentColor}80`,
+            }}
+          >
+            {isLoading ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white mr-2" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                Sign in
+                <ArrowRight size={16} className="ml-1.5 transition-transform group-hover:translate-x-0.5" />
+              </>
+            )}
+          </Button>
+          <p className="text-center text-[11px] text-[hsl(220,10%,55%)] font-medium">
+            Takes less than 30 seconds
+          </p>
+        </div>
       </form>
     </Form>
   );
