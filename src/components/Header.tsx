@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare, User } from 'lucide-react';
+import { BookOpen, Home, Sparkles, Book, Users, UserCheck, Menu, X, Upload, CheckCheck, MessageSquare, User, LayoutDashboard, BarChart3, Grid3x3 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -75,82 +75,101 @@ const Header = () => {
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className={`text-sm font-medium ${location.pathname === '/' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
-            <Home className="h-4 w-4" />
-            <span>Home</span>
-          </Link>
-          <Link to="/features" className={`text-sm font-medium ${location.pathname === '/features' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
-            <Sparkles className="h-4 w-4" />
-            <span>Features</span>
-          </Link>
-          <Link to="/how-it-works" className={`text-sm font-medium ${location.pathname === '/how-it-works' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
-            <Book className="h-4 w-4" />
-            <span>How It Works</span>
-          </Link>
-          <Link to="/upload" className={`text-sm font-medium ${location.pathname === '/upload' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
-            <Upload className="h-4 w-4" />
-            <span>Upload Assignments</span>
-          </Link>
-          <Link to="/contact" className={`text-sm font-medium ${location.pathname === '/contact' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
-            <MessageSquare className="h-4 w-4" />
-            <span>Contact</span>
-          </Link>
-          
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  <span>For Educators</span>
-                </NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                    <li className="row-span-3">
-                      <NavigationMenuLink asChild>
-                        <Link
-                          className="flex h-full w-full select-none flex-col justify-end rounded-md blue-purple-gradient p-6 no-underline outline-none focus:shadow-md"
-                          to="/google-classroom"
-                        >
-                          <div className="mb-2 mt-4 text-lg font-medium text-white">
-                            Google Classroom Integration
-                          </div>
-                          <p className="text-sm leading-tight text-white/90">
-                            Seamlessly integrate with Google Classroom to automate your grading workflow
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          to="/for-teachers"
-                        >
-                          <div className="text-sm font-medium leading-none">For Teachers</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Save time with AI-powered grading and feedback
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                    <li>
-                      <NavigationMenuLink asChild>
-                        <Link
-                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                          to="/for-students"
-                        >
-                          <div className="text-sm font-medium leading-none">For Students</div>
-                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                            Receive detailed and consistent feedback on your work
-                          </p>
-                        </Link>
-                      </NavigationMenuLink>
-                    </li>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+          {user ? (
+            <>
+              <Link to="/dashboard" className={`text-sm font-medium ${location.pathname === '/dashboard' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <LayoutDashboard className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Link>
+              <Link to="/upload-assignments" className={`text-sm font-medium ${location.pathname === '/upload-assignments' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <Upload className="h-4 w-4" />
+                <span>Upload Assignment</span>
+              </Link>
+              <Link to="/dashboard" className={`text-sm font-medium hover:text-brand-blue transition-colors flex items-center gap-1`}>
+                <BarChart3 className="h-4 w-4" />
+                <span>Results</span>
+              </Link>
+              <Link to="/google-classroom" className={`text-sm font-medium ${location.pathname === '/google-classroom' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <Grid3x3 className="h-4 w-4" />
+                <span>Integrations</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/" className={`text-sm font-medium ${location.pathname === '/' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <Home className="h-4 w-4" />
+                <span>Home</span>
+              </Link>
+              <Link to="/features" className={`text-sm font-medium ${location.pathname === '/features' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <Sparkles className="h-4 w-4" />
+                <span>Features</span>
+              </Link>
+              <Link to="/how-it-works" className={`text-sm font-medium ${location.pathname === '/how-it-works' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <Book className="h-4 w-4" />
+                <span>How It Works</span>
+              </Link>
+              <Link to="/contact" className={`text-sm font-medium ${location.pathname === '/contact' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+                <MessageSquare className="h-4 w-4" />
+                <span>Contact</span>
+              </Link>
+
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span>For Educators</span>
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                        <li className="row-span-3">
+                          <NavigationMenuLink asChild>
+                            <Link
+                              className="flex h-full w-full select-none flex-col justify-end rounded-md blue-purple-gradient p-6 no-underline outline-none focus:shadow-md"
+                              to="/google-classroom"
+                            >
+                              <div className="mb-2 mt-4 text-lg font-medium text-white">
+                                Google Classroom Integration
+                              </div>
+                              <p className="text-sm leading-tight text-white/90">
+                                Seamlessly integrate with Google Classroom to automate your grading workflow
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                              to="/for-teachers"
+                            >
+                              <div className="text-sm font-medium leading-none">For Teachers</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                Save time with AI-powered grading and feedback
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                              to="/for-students"
+                            >
+                              <div className="text-sm font-medium leading-none">For Students</div>
+                              <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                                Receive detailed and consistent feedback on your work
+                              </p>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            </>
+          )}
         </nav>
         
         {/* Mobile Menu Button */}
