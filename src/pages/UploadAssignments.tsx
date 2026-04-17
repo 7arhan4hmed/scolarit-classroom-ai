@@ -161,10 +161,10 @@ const UploadAssignments = () => {
       });
 
       toast({
-        title: "Assessment saved",
-        description: "The assessment has been saved to your dashboard.",
+        title: "Assignment uploaded successfully",
+        description: "Your graded assignment is now on your dashboard.",
       });
-      navigate('/dashboard');
+      navigate('/dashboard?uploaded=1');
     } catch (error) {
       console.error("Error saving assignment:", error);
       toast({

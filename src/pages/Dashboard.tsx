@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,12 +20,23 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [assignmentCount, setAssignmentCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     if (user) {
       loadDashboard();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (searchParams.get('uploaded') === '1') {
+      toast.success('Assignment uploaded successfully', {
+        description: 'It now appears in your recent activity.',
+      });
+      searchParams.delete('uploaded');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const loadDashboard = async () => {
     try {

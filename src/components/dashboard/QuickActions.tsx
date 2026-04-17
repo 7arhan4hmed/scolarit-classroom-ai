@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, BarChart3, MessageSquare, Grid3x3, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Upload, BarChart3, MessageSquare, Grid3x3, ArrowRight, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const quickActions = [
   {
@@ -35,16 +36,32 @@ const quickActions = [
 ];
 
 export const QuickActions = () => {
+  const navigate = useNavigate();
+  const [loadingLink, setLoadingLink] = useState<string | null>(null);
+
+  const handleClick = (link: string) => {
+    setLoadingLink(link);
+    // small delay so users see the press feedback
+    setTimeout(() => navigate(link), 120);
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {quickActions.map((action) => {
         const Icon = action.icon;
+        const isLoading = loadingLink === action.link;
         return (
-          <Link key={action.title} to={action.link} className="block group">
+          <button
+            key={action.title}
+            type="button"
+            onClick={() => handleClick(action.link)}
+            disabled={isLoading}
+            className="block group text-left w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xl"
+          >
             <Card
-              className={`h-full border-2 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-primary/50 ${
+              className={`h-full border-2 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-primary/50 active:translate-y-0 active:shadow-md ${
                 action.primary ? 'border-primary/30 bg-gradient-to-br from-primary/5 to-transparent' : ''
-              }`}
+              } ${isLoading ? 'opacity-80' : ''}`}
             >
               <CardContent className="p-6 flex flex-col h-full">
                 <div className="flex items-start justify-between mb-4">
@@ -53,7 +70,11 @@ export const QuickActions = () => {
                   >
                     <Icon className="h-6 w-6 text-white" />
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
+                  {isLoading ? (
+                    <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                  ) : (
+                    <ArrowRight className="h-5 w-5 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
+                  )}
                 </div>
                 <h3 className="font-semibold text-base leading-tight mb-1">{action.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -61,7 +82,7 @@ export const QuickActions = () => {
                 </p>
               </CardContent>
             </Card>
-          </Link>
+          </button>
         );
       })}
     </div>
