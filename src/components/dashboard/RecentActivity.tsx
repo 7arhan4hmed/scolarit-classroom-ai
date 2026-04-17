@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Clock } from 'lucide-react';
+import { FileText, Clock, Upload, Inbox } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
 interface Assignment {
@@ -84,14 +86,28 @@ export const RecentActivity = () => {
 
   if (assignments.length === 0) {
     return (
-      <Card>
+      <Card className="border-dashed">
         <CardHeader>
           <CardTitle>Recent Activity</CardTitle>
           <CardDescription>Your latest assignments</CardDescription>
         </CardHeader>
-        <CardContent className="py-12 text-center">
-          <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No assignments yet. Upload your first assignment to get started!</p>
+        <CardContent className="py-12 text-center flex flex-col items-center">
+          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
+            <Inbox className="w-7 h-7 text-muted-foreground" />
+          </div>
+          <p className="font-medium mb-1">No assignments yet</p>
+          <p className="text-sm text-muted-foreground mb-5 max-w-sm">
+            Once you upload, they'll appear here with AI grades and feedback.
+          </p>
+          <Button
+            asChild
+            className="bg-gradient-to-r from-[#4F46E5] to-[#6366F1] hover:shadow-lg hover:-translate-y-0.5 transition-all"
+          >
+            <Link to="/upload-assignments">
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Assignment
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     );
