@@ -81,15 +81,15 @@ const Header = () => {
                 <LayoutDashboard className="h-4 w-4" />
                 <span>Dashboard</span>
               </Link>
-              <Link to="/upload-assignments" className={`text-sm font-medium ${location.pathname === '/upload-assignments' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+              <Link to="/upload" className={`text-sm font-medium ${location.pathname === '/upload' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
                 <Upload className="h-4 w-4" />
                 <span>Upload Assignment</span>
               </Link>
-              <Link to="/dashboard" className={`text-sm font-medium hover:text-brand-blue transition-colors flex items-center gap-1`}>
+              <Link to="/results" className={`text-sm font-medium ${location.pathname === '/results' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
                 <BarChart3 className="h-4 w-4" />
                 <span>Results</span>
               </Link>
-              <Link to="/google-classroom" className={`text-sm font-medium ${location.pathname === '/google-classroom' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
+              <Link to="/integrations" className={`text-sm font-medium ${location.pathname === '/integrations' ? 'text-brand-blue' : 'hover:text-brand-blue'} transition-colors flex items-center gap-1`}>
                 <Grid3x3 className="h-4 w-4" />
                 <span>Integrations</span>
               </Link>

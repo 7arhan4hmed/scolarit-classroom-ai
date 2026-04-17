@@ -49,6 +49,9 @@ const App = () => (
             <Route path="/features" element={<Features />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/upload" element={<ProtectedRoute><UploadAssignments /></ProtectedRoute>} />
+            <Route path="/upload-assignments" element={<ProtectedRoute><UploadAssignments /></ProtectedRoute>} />
+            <Route path="/results" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/integrations" element={<ProtectedRoute><GoogleClassroom /></ProtectedRoute>} />
             <Route path="/for-teachers" element={<ForTeachers />} />
             <Route path="/for-students" element={<ForStudents />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

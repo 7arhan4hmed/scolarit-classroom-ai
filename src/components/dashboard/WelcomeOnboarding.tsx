@@ -13,7 +13,7 @@ const steps = [
     title: 'Upload your first assignment',
     description: 'Drop a PDF, DOCX, or paste text — we handle the rest.',
     cta: 'Upload now',
-    to: '/upload-assignments',
+    to: '/upload',
     accent: 'from-primary/15 to-primary/5',
     iconClass: 'bg-primary/10 text-primary',
   },
@@ -22,7 +22,7 @@ const steps = [
     title: 'Choose a grading rubric',
     description: 'Pick a preset or create your own custom criteria.',
     cta: 'Browse rubrics',
-    to: '/upload-assignments',
+    to: '/upload',
     accent: 'from-accent/15 to-accent/5',
     iconClass: 'bg-accent/10 text-accent',
   },
@@ -55,7 +55,7 @@ export const WelcomeOnboarding = ({ userName }: WelcomeOnboardingProps) => {
             size="lg"
             className="bg-gradient-to-r from-[#4F46E5] to-[#6366F1] hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 transition-all duration-200"
           >
-            <Link to="/upload-assignments">
+            <Link to="/upload">
               <Upload className="mr-2 h-4 w-4" />
               Upload Assignment
             </Link>

@@ -103,7 +103,7 @@ export const RecentActivity = () => {
             asChild
             className="bg-gradient-to-r from-[#4F46E5] to-[#6366F1] hover:shadow-lg hover:-translate-y-0.5 transition-all"
           >
-            <Link to="/upload-assignments">
+            <Link to="/upload">
               <Upload className="mr-2 h-4 w-4" />
               Upload Assignment
             </Link>
