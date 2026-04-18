@@ -24,6 +24,7 @@ import Blackboard from "./pages/Blackboard";
 import Contact from "./pages/Contact";
 import ProfileSetup from "./pages/ProfileSetup";
 import Profile from "./pages/Profile";
+import Results from "./pages/Results";
 
 // Add custom keyframes for animations we need
 import "./animations.css";
@@ -50,7 +51,7 @@ const App = () => (
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/upload" element={<ProtectedRoute><UploadAssignments /></ProtectedRoute>} />
             <Route path="/upload-assignments" element={<ProtectedRoute><UploadAssignments /></ProtectedRoute>} />
-            <Route path="/results" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
             <Route path="/integrations" element={<ProtectedRoute><GoogleClassroom /></ProtectedRoute>} />
             <Route path="/for-teachers" element={<ForTeachers />} />
             <Route path="/for-students" element={<ForStudents />} />

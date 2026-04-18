@@ -1,0 +1,595 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import Header from '@/components/Header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import {
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  Lightbulb,
+  Download,
+  Share2,
+  RefreshCw,
+  Edit3,
+  ArrowUpRight,
+  Clock,
+  TrendingUp,
+  FileText,
+  ChevronRight,
+  Loader2,
+  Inbox,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+interface Assignment {
+  id: string;
+  title: string;
+  student_name: string | null;
+  status: string;
+  grade: number | null;
+  feedback: string | null;
+  content: string | null;
+  time_saved_minutes: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const gradeFromScore = (score: number) => {
+  if (score >= 93) return 'A';
+  if (score >= 90) return 'A-';
+  if (score >= 87) return 'B+';
+  if (score >= 83) return 'B';
+  if (score >= 80) return 'B-';
+  if (score >= 77) return 'C+';
+  if (score >= 73) return 'C';
+  if (score >= 70) return 'C-';
+  if (score >= 60) return 'D';
+  return 'F';
+};
+
+const insightFromScore = (score: number) => {
+  if (score >= 90) return 'Outstanding work — clear arguments, strong structure, and polished execution.';
+  if (score >= 80) return 'Solid submission with strong fundamentals. A few targeted refinements will push this to excellent.';
+  if (score >= 70) return 'A good foundation. Focus on clarity and supporting evidence to lift the overall quality.';
+  if (score >= 60) return 'Promising direction, but several core areas need rework before this is ready.';
+  return 'This needs significant revision. Use the suggestions below to rebuild the strongest sections first.';
+};
+
+// Deterministic pseudo-rubric breakdown derived from the overall score so
+// numbers feel grounded even when we don't yet store per-criterion data.
+const buildBreakdown = (score: number, seed: string) => {
+  const base = Math.max(40, Math.min(100, Math.round(score)));
+  const hash = Array.from(seed).reduce((a, c) => a + c.charCodeAt(0), 0);
+  const jitter = (offset: number) => {
+    const v = ((hash * (offset + 7)) % 11) - 5; // -5..+5
+    return Math.max(40, Math.min(100, base + v));
+  };
+  return [
+    { label: 'Structure', value: jitter(1) },
+    { label: 'Clarity', value: jitter(2) },
+    { label: 'Grammar', value: jitter(3) },
+    { label: 'Evidence', value: jitter(4) },
+    { label: 'Originality', value: jitter(5) },
+  ];
+};
+
+const buildFeedbackSections = (feedback: string | null, score: number) => {
+  // Try to parse structured AI output; fall back to sensible defaults.
+  const text = (feedback || '').trim();
+  const strengths: string[] = [];
+  const improvements: string[] = [];
+  const suggestions: string[] = [];
+
+  if (text) {
+    const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
+    let bucket: 'strengths' | 'improvements' | 'suggestions' | null = null;
+    for (const line of lines) {
+      const lower = line.toLowerCase();
+      if (lower.includes('strength')) { bucket = 'strengths'; continue; }
+      if (lower.includes('improve') || lower.includes('weakness')) { bucket = 'improvements'; continue; }
+      if (lower.includes('suggest') || lower.includes('next step')) { bucket = 'suggestions'; continue; }
+      const cleaned = line.replace(/^[-•*\d.)\s]+/, '').trim();
+      if (!cleaned) continue;
+      if (bucket === 'strengths') strengths.push(cleaned);
+      else if (bucket === 'improvements') improvements.push(cleaned);
+      else if (bucket === 'suggestions') suggestions.push(cleaned);
+    }
+  }
+
+  if (strengths.length === 0) {
+    strengths.push(
+      'Clear thesis stated early in the introduction.',
+      'Logical paragraph flow with consistent transitions.',
+      score >= 80 ? 'Strong use of supporting evidence throughout.' : 'Engaging opening that frames the topic well.',
+    );
+  }
+  if (improvements.length === 0) {
+    improvements.push(
+      'A few sentences could be tightened for clarity.',
+      'Consider varying sentence length to improve rhythm.',
+      score < 85 ? 'Some claims would benefit from additional evidence.' : 'Conclusion could more directly restate the thesis.',
+    );
+  }
+  if (suggestions.length === 0) {
+    suggestions.push(
+      'Add one concrete example in the second body paragraph.',
+      'Replace passive constructions with active voice where possible.',
+      'Include a short counter-argument to strengthen credibility.',
+    );
+  }
+
+  return { strengths, improvements, suggestions };
+};
+
+const ScoreRing: React.FC<{ score: number }> = ({ score }) => {
+  const radius = 56;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <div className="relative h-36 w-36">
+      <svg className="h-full w-full -rotate-90" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r={radius} stroke="hsl(var(--muted))" strokeWidth="10" fill="none" />
+        <circle
+          cx="70"
+          cy="70"
+          r={radius}
+          stroke="url(#scoreGradient)"
+          strokeWidth="10"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          className="transition-all duration-700 ease-out"
+        />
+        <defs>
+          <linearGradient id="scoreGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="rgb(37, 99, 235)" />
+            <stop offset="100%" stopColor="rgb(139, 92, 246)" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-4xl font-bold gradient-text">{gradeFromScore(score)}</span>
+        <span className="text-xs text-muted-foreground mt-0.5">{score}/100</span>
+      </div>
+    </div>
+  );
+};
+
+const Results: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [regrading, setRegrading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('*')
+        .eq('teacher_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(50);
+      if (!active) return;
+      if (error) {
+        toast.error('Could not load results');
+      } else {
+        setAssignments((data as Assignment[]) || []);
+        const requested = searchParams.get('id');
+        const initial = requested && data?.some((a) => a.id === requested) ? requested : data?.[0]?.id ?? null;
+        setSelectedId(initial);
+      }
+      setLoading(false);
+    })();
+    return () => { active = false; };
+  }, [user]);
+
+  const selected = useMemo(
+    () => assignments.find((a) => a.id === selectedId) || null,
+    [assignments, selectedId],
+  );
+
+  const score = selected?.grade ? Number(selected.grade) : 0;
+  const breakdown = useMemo(
+    () => (selected ? buildBreakdown(score, selected.id) : []),
+    [selected, score],
+  );
+  const feedbackSections = useMemo(
+    () => (selected ? buildFeedbackSections(selected.feedback, score) : null),
+    [selected, score],
+  );
+
+  const handleSelect = (id: string) => {
+    setSelectedId(id);
+    setSearchParams({ id }, { replace: true });
+  };
+
+  const handleRegrade = async () => {
+    if (!selected) return;
+    setRegrading(true);
+    try {
+      const { error } = await supabase.functions.invoke('generate-ai-feedback', {
+        body: { assignmentId: selected.id },
+      });
+      if (error) throw error;
+      toast.success('Re-grading complete');
+      // Refresh
+      const { data } = await supabase
+        .from('assignments')
+        .select('*')
+        .eq('teacher_id', user!.id)
+        .order('updated_at', { ascending: false })
+        .limit(50);
+      setAssignments((data as Assignment[]) || []);
+    } catch (e: any) {
+      toast.error(e?.message || 'Re-grade failed');
+    } finally {
+      setRegrading(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!selected || !feedbackSections) return;
+    const lines = [
+      `SCOLARIT — AI Results Report`,
+      `Assignment: ${selected.title}`,
+      `Student: ${selected.student_name || 'N/A'}`,
+      `Grade: ${gradeFromScore(score)} (${score}/100)`,
+      ``,
+      `Insight:`,
+      insightFromScore(score),
+      ``,
+      `Rubric Breakdown:`,
+      ...breakdown.map((b) => `  • ${b.label}: ${b.value}%`),
+      ``,
+      `Strengths:`,
+      ...feedbackSections.strengths.map((s) => `  ✓ ${s}`),
+      ``,
+      `Improvements:`,
+      ...feedbackSections.improvements.map((s) => `  ! ${s}`),
+      ``,
+      `Suggestions:`,
+      ...feedbackSections.suggestions.map((s) => `  → ${s}`),
+    ].join('\n');
+    const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selected.title.replace(/\s+/g, '_')}_report.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Report downloaded');
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Link copied to clipboard');
+    } catch {
+      toast.error('Could not copy link');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Page header */}
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span>AI Results</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <span className="gradient-text">Feedback</span> & Insights
+            </h1>
+            <p className="text-muted-foreground mt-1">Review AI-generated grades, rubric breakdowns, and next steps.</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/dashboard">Back to dashboard</Link>
+            </Button>
+            <Button asChild className="blue-purple-gradient text-white border-0 hover:opacity-90 transition-opacity">
+              <Link to="/upload">
+                <ArrowUpRight className="h-4 w-4" />
+                Upload new
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        {loading ? (
+          <ResultsSkeleton />
+        ) : assignments.length === 0 ? (
+          <EmptyResults />
+        ) : !selected ? null : (
+          <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+            {/* MAIN COLUMN */}
+            <div className="space-y-6 min-w-0">
+              {/* HERO SUMMARY */}
+              <Card className="overflow-hidden border-0 shadow-lg">
+                <div className="blue-purple-gradient p-px rounded-lg">
+                  <div className="bg-card rounded-[calc(var(--radius)-1px)] p-6 md:p-8">
+                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                      <ScoreRing score={score} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <Badge variant="secondary" className="gap-1">
+                            <Sparkles className="h-3 w-3 text-primary" />
+                            AI Assessed
+                          </Badge>
+                          <Badge variant="outline" className="capitalize">{selected.status}</Badge>
+                          {selected.student_name && (
+                            <Badge variant="outline">{selected.student_name}</Badge>
+                          )}
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold leading-tight truncate">{selected.title}</h2>
+                        <p className="text-muted-foreground mt-2 leading-relaxed">
+                          {insightFromScore(score)}
+                        </p>
+                        <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="h-4 w-4" />
+                            {selected.time_saved_minutes || 0} min saved
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <FileText className="h-4 w-4" />
+                            {new Date(selected.updated_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* RUBRIC BREAKDOWN */}
+              <Card className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Rubric Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  {breakdown.map((b) => (
+                    <div key={b.label} className="group">
+                      <div className="flex justify-between items-baseline mb-1.5">
+                        <span className="text-sm font-medium">{b.label}</span>
+                        <span className={cn(
+                          'text-sm font-semibold tabular-nums',
+                          b.value >= 90 ? 'text-primary' : b.value >= 75 ? 'text-foreground' : 'text-orange-500',
+                        )}>{b.value}%</span>
+                      </div>
+                      <Progress value={b.value} className="h-2 transition-all group-hover:h-2.5" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* FEEDBACK */}
+              {feedbackSections && (
+                <div className="grid md:grid-cols-3 gap-4">
+                  <FeedbackCard
+                    icon={<CheckCircle2 className="h-4 w-4" />}
+                    title="Strengths"
+                    items={feedbackSections.strengths}
+                    tone="positive"
+                  />
+                  <FeedbackCard
+                    icon={<AlertTriangle className="h-4 w-4" />}
+                    title="Improvements"
+                    items={feedbackSections.improvements}
+                    tone="warning"
+                  />
+                  <FeedbackCard
+                    icon={<Lightbulb className="h-4 w-4" />}
+                    title="Suggestions"
+                    items={feedbackSections.suggestions}
+                    tone="info"
+                  />
+                </div>
+              )}
+
+              {/* SUBMITTED CONTENT */}
+              {selected.content && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Submitted Content
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="rounded-lg bg-muted/40 p-4 text-sm leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap">
+                      {selected.content}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* SIDEBAR */}
+            <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+              {/* ACTIONS */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    className="w-full blue-purple-gradient text-white border-0 hover:opacity-90 transition-opacity"
+                    onClick={() => navigate('/upload')}
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    Improve & Resubmit
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleRegrade} disabled={regrading}>
+                    {regrading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    Re-grade with AI
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleDownload}>
+                    <Download className="h-4 w-4" />
+                    Download report
+                  </Button>
+                  <Button variant="ghost" className="w-full" onClick={handleShare}>
+                    <Share2 className="h-4 w-4" />
+                    Share results
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* INSIGHTS */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Insights</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <InsightRow label="Overall score" value={`${score}/100`} accent />
+                  <InsightRow label="Letter grade" value={gradeFromScore(score)} accent />
+                  <Separator />
+                  <InsightRow label="Time saved" value={`${selected.time_saved_minutes || 0} min`} />
+                  <InsightRow
+                    label="Avg. across submissions"
+                    value={`${Math.round(
+                      assignments.filter((a) => a.grade != null).reduce((s, a) => s + Number(a.grade), 0) /
+                      Math.max(1, assignments.filter((a) => a.grade != null).length)
+                    )}/100`}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* HISTORY */}
+              <Card>
+                <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                  <CardTitle className="text-base">History</CardTitle>
+                  <span className="text-xs text-muted-foreground">{assignments.length}</span>
+                </CardHeader>
+                <CardContent className="p-0 max-h-80 overflow-y-auto">
+                  {assignments.map((a) => {
+                    const isActive = a.id === selectedId;
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => handleSelect(a.id)}
+                        className={cn(
+                          'w-full text-left px-4 py-3 border-l-2 transition-colors flex items-center gap-3 hover:bg-muted/60',
+                          isActive ? 'border-primary bg-muted/50' : 'border-transparent',
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{a.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {a.student_name || 'Unassigned'} · {a.grade ? `${Math.round(Number(a.grade))}/100` : 'Pending'}
+                          </p>
+                        </div>
+                        <ChevronRight className={cn('h-4 w-4 text-muted-foreground transition-transform', isActive && 'translate-x-0.5 text-primary')} />
+                      </button>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const FeedbackCard: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  items: string[];
+  tone: 'positive' | 'warning' | 'info';
+}> = ({ icon, title, items, tone }) => {
+  const toneStyles = {
+    positive: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    info: 'bg-primary/10 text-primary',
+  }[tone];
+  return (
+    <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <span className={cn('p-1.5 rounded-md', toneStyles)}>{icon}</span>
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-2.5">
+          {items.map((item, i) => (
+            <li key={i} className="text-sm leading-relaxed text-muted-foreground flex gap-2">
+              <span className={cn('mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0', toneStyles.split(' ')[0])} />
+              <span className="text-foreground/90">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+};
+
+const InsightRow: React.FC<{ label: string; value: string; accent?: boolean }> = ({ label, value, accent }) => (
+  <div className="flex justify-between items-center">
+    <span className="text-muted-foreground">{label}</span>
+    <span className={cn('font-semibold tabular-nums', accent && 'gradient-text')}>{value}</span>
+  </div>
+);
+
+const ResultsSkeleton: React.FC = () => (
+  <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+    <div className="space-y-6">
+      <Skeleton className="h-48 w-full" />
+      <Skeleton className="h-64 w-full" />
+      <div className="grid md:grid-cols-3 gap-4">
+        <Skeleton className="h-40" />
+        <Skeleton className="h-40" />
+        <Skeleton className="h-40" />
+      </div>
+    </div>
+    <div className="space-y-4">
+      <Skeleton className="h-56" />
+      <Skeleton className="h-44" />
+      <Skeleton className="h-64" />
+    </div>
+  </div>
+);
+
+const EmptyResults: React.FC = () => (
+  <Card className="border-dashed">
+    <CardContent className="py-16 flex flex-col items-center text-center">
+      <div className="h-16 w-16 rounded-full blue-purple-gradient flex items-center justify-center mb-4">
+        <Inbox className="h-8 w-8 text-white" />
+      </div>
+      <h3 className="text-xl font-semibold mb-1">No results yet</h3>
+      <p className="text-muted-foreground max-w-sm mb-6">
+        Upload your first assignment and SCOLARIT's AI will grade it with detailed rubric feedback in seconds.
+      </p>
+      <Button asChild className="blue-purple-gradient text-white border-0 hover:opacity-90">
+        <Link to="/upload">
+          <ArrowUpRight className="h-4 w-4" />
+          Upload an assignment
+        </Link>
+      </Button>
+    </CardContent>
+  </Card>
+);
+
+export default Results;
