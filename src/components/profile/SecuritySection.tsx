@@ -137,15 +137,15 @@ const SecuritySection = ({ user }: SecuritySectionProps) => {
   };
 
   return (
-    <Card className="border-border/50 shadow-sm">
-      <CardHeader className="border-b bg-card">
+    <Card className="border-border/50 shadow-sm transition-shadow hover:shadow-md">
+      <CardHeader className="border-b">
         <CardTitle className="text-xl">Security</CardTitle>
         <CardDescription>Manage your password, email verification, and sessions</CardDescription>
       </CardHeader>
       <CardContent className="p-8 space-y-8">
         {/* Email Verification Status */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <Mail className="h-5 w-5 text-muted-foreground" />
               <div>
@@ -154,12 +154,12 @@ const SecuritySection = ({ user }: SecuritySectionProps) => {
               </div>
             </div>
             {user?.email_confirmed_at ? (
-              <Badge variant="default" className="bg-green-500/10 text-green-700 hover:bg-green-500/20 border-green-200">
+              <Badge variant="default" className="bg-primary/10 text-primary hover:bg-primary/15 border-primary/20">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Verified
               </Badge>
             ) : (
-              <Badge variant="destructive" className="bg-orange-500/10 text-orange-700 hover:bg-orange-500/20 border-orange-200">
+              <Badge variant="destructive" className="bg-destructive/10 text-destructive hover:bg-destructive/15 border-destructive/20">
                 <XCircle className="h-3 w-3 mr-1" />
                 Not Verified
               </Badge>
@@ -222,7 +222,7 @@ const SecuritySection = ({ user }: SecuritySectionProps) => {
           <Button
             type="submit"
             disabled={changingPassword || !passwordData.newPassword || !passwordData.confirmPassword}
-            className="bg-[#005558] hover:bg-[#004445]"
+            className="blue-purple-gradient text-white border-0 hover:opacity-90 transition-all shadow-sm hover:shadow-md"
           >
             {changingPassword ? (
               <>
@@ -248,11 +248,26 @@ const SecuritySection = ({ user }: SecuritySectionProps) => {
           </Label>
           <div className="space-y-3">
             {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div
+                key={index}
+                className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                  index === 0
+                    ? 'bg-primary/5 border-primary/20'
+                    : 'bg-muted/30 border-transparent hover:bg-muted/50'
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <Monitor className="h-4 w-4 text-muted-foreground" />
+                  <Monitor className={`h-4 w-4 ${index === 0 ? 'text-primary' : 'text-muted-foreground'}`} />
                   <div>
-                    <p className="text-sm font-medium">{activity.device}</p>
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      {activity.device}
+                      {index === 0 && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                          Active
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-muted-foreground">{activity.location}</p>
                   </div>
                 </div>
