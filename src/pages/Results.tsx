@@ -25,6 +25,10 @@ import {
   ChevronRight,
   Loader2,
   Inbox,
+  Zap,
+  BarChart3,
+  Target,
+  PlayCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -572,24 +576,132 @@ const ResultsSkeleton: React.FC = () => (
   </div>
 );
 
-const EmptyResults: React.FC = () => (
-  <Card className="border-dashed">
-    <CardContent className="py-16 flex flex-col items-center text-center">
-      <div className="h-16 w-16 rounded-full blue-purple-gradient flex items-center justify-center mb-4">
-        <Inbox className="h-8 w-8 text-white" />
+const EmptyResults: React.FC = () => {
+  const sampleBreakdown = [
+    { label: 'Structure', value: 92 },
+    { label: 'Clarity', value: 85 },
+    { label: 'Grammar', value: 90 },
+    { label: 'Evidence', value: 84 },
+  ];
+  return (
+    <div className="max-w-5xl mx-auto">
+      {/* Hero copy */}
+      <div className="text-center max-w-2xl mx-auto mb-10">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
+          <Sparkles className="h-3.5 w-3.5" />
+          AI-Powered Grading
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
+          See AI-powered feedback in action <span className="gradient-text">✨</span>
+        </h2>
+        <p className="text-muted-foreground md:text-lg leading-relaxed">
+          Upload your first assignment and get instant grades, detailed insights, and improvement
+          suggestions in seconds.
+        </p>
       </div>
-      <h3 className="text-xl font-semibold mb-1">No results yet</h3>
-      <p className="text-muted-foreground max-w-sm mb-6">
-        Upload your first assignment and SCOLARIT's AI will grade it with detailed rubric feedback in seconds.
-      </p>
-      <Button asChild className="blue-purple-gradient text-white border-0 hover:opacity-90">
-        <Link to="/upload">
-          <ArrowUpRight className="h-4 w-4" />
-          Upload an assignment
+
+      {/* Preview card */}
+      <div className="relative group mb-10">
+        <div className="absolute -inset-1 blue-purple-gradient rounded-2xl opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500" />
+        <Card className="relative overflow-hidden shadow-xl group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-300">
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Sample preview
+          </div>
+          <CardContent className="p-6 md:p-8">
+            <div className="grid md:grid-cols-[auto_1fr] gap-6 items-center">
+              <ScoreRing score={88} />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <Badge variant="secondary" className="gap-1">
+                    <Sparkles className="h-3 w-3 text-primary" />
+                    AI Assessed
+                  </Badge>
+                  <Badge variant="outline">Essay</Badge>
+                </div>
+                <h3 className="text-xl font-bold mb-1.5">The Impact of Climate Change</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  Strong thesis with well-supported arguments. Tightening a few transitions and
+                  adding one concrete example would push this to an A.
+                </p>
+                <div className="space-y-2.5">
+                  {sampleBreakdown.map((b) => (
+                    <div key={b.label}>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">{b.label}</span>
+                        <span className="font-semibold tabular-nums">{b.value}%</span>
+                      </div>
+                      <Progress value={b.value} className="h-1.5" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Feature highlights */}
+      <div className="grid md:grid-cols-3 gap-4 mb-10">
+        {[
+          {
+            icon: Zap,
+            title: 'Instant AI grading',
+            desc: 'Get rubric-aligned scores in under 30 seconds.',
+          },
+          {
+            icon: BarChart3,
+            title: 'Detailed breakdown',
+            desc: 'See exactly where each criterion lands and why.',
+          },
+          {
+            icon: Target,
+            title: 'Actionable feedback',
+            desc: 'Specific next steps to improve every submission.',
+          },
+        ].map((f) => (
+          <div
+            key={f.title}
+            className="p-5 rounded-xl border bg-card hover:border-primary/40 hover:shadow-md transition-all"
+          >
+            <div className="h-9 w-9 rounded-lg blue-purple-gradient flex items-center justify-center mb-3">
+              <f.icon className="h-5 w-5 text-white" />
+            </div>
+            <h4 className="font-semibold mb-1">{f.title}</h4>
+            <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* CTA */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Button
+            asChild
+            size="lg"
+            className="blue-purple-gradient text-white border-0 hover:opacity-90 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 transition-all"
+          >
+            <Link to="/upload">
+              <ArrowUpRight className="h-4 w-4" />
+              Upload Assignment
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="hover:border-primary/50 transition-colors">
+            <Link to="/upload?demo=1">
+              <PlayCircle className="h-4 w-4" />
+              Try Demo
+            </Link>
+          </Button>
+        </div>
+        <Link
+          to="/how-it-works"
+          className="text-sm text-muted-foreground hover:text-primary transition-colors mt-1 inline-flex items-center gap-1"
+        >
+          See how it works <ChevronRight className="h-3.5 w-3.5" />
         </Link>
-      </Button>
-    </CardContent>
-  </Card>
-);
+      </div>
+    </div>
+  );
+};
 
 export default Results;
