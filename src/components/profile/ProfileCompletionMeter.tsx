@@ -20,7 +20,7 @@ const ProfileCompletionMeter = ({ profile, user }: ProfileCompletionMeterProps) 
   const completionPercentage = (completedCount / completionItems.length) * 100;
 
   return (
-    <Card className="border-border/50 shadow-sm bg-gradient-to-br from-[#005558]/5 to-transparent">
+    <Card className="border-border/50 shadow-sm bg-gradient-to-br from-primary/5 via-secondary/5 to-transparent">
       <CardContent className="p-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -30,14 +30,14 @@ const ProfileCompletionMeter = ({ profile, user }: ProfileCompletionMeterProps) 
                 {completedCount} of {completionItems.length} completed
               </p>
             </div>
-            <div className="text-3xl font-bold text-[#005558]">{Math.round(completionPercentage)}%</div>
+            <div className="text-3xl font-bold blue-purple-text">{Math.round(completionPercentage)}%</div>
           </div>
           <Progress value={completionPercentage} className="h-2" />
           <div className="grid grid-cols-2 gap-2 pt-2">
             {completionItems.map((item, index) => (
               <div key={index} className="flex items-center gap-2 text-sm">
                 {item.completed ? (
-                  <CheckCircle2 className="h-4 w-4 text-[#005558]" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                 ) : (
                   <Circle className="h-4 w-4 text-muted-foreground" />
                 )}
