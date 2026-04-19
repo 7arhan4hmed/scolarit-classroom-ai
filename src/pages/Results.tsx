@@ -448,11 +448,15 @@ const Results: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button
-                    className="w-full blue-purple-gradient text-white border-0 hover:opacity-90 transition-opacity"
+                    className="w-full blue-purple-gradient text-white border-0 hover:opacity-90 hover:shadow-md hover:shadow-primary/20 transition-all"
                     onClick={() => navigate('/upload')}
                   >
                     <Edit3 className="h-4 w-4" />
                     Improve & Resubmit
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => navigate('/upload')}>
+                    <UploadIcon className="h-4 w-4" />
+                    Upload new assignment
                   </Button>
                   <Button variant="outline" className="w-full" onClick={handleRegrade} disabled={regrading}>
                     {regrading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
