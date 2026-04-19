@@ -327,6 +327,8 @@ const Results: React.FC = () => {
 
         {loading ? (
           <ResultsSkeleton />
+        ) : error ? (
+          <ErrorState message={error} onRetry={loadAssignments} />
         ) : assignments.length === 0 ? (
           <EmptyResults />
         ) : !selected ? null : (
