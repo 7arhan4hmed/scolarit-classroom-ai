@@ -420,21 +420,22 @@ const Results: React.FC = () => {
                 </div>
               )}
 
-              {/* SUBMITTED CONTENT */}
-              {selected.content && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-primary" />
-                      Submitted Content
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-lg bg-muted/40 p-4 text-sm leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap">
-                      {selected.content}
-                    </div>
-                  </CardContent>
-                </Card>
+              {/* ANNOTATED SUBMITTED CONTENT */}
+              {selected.content && feedbackSections && (
+                <AnnotatedContent
+                  content={selected.content}
+                  strengths={feedbackSections.strengths}
+                  improvements={feedbackSections.improvements}
+                  suggestions={feedbackSections.suggestions}
+                />
+              )}
+
+              {/* IMPROVEMENT LOOP */}
+              {feedbackSections && (
+                <ImprovementLoop
+                  suggestions={feedbackSections.suggestions}
+                  onResubmit={() => navigate('/upload')}
+                />
               )}
             </div>
 
