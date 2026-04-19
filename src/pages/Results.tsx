@@ -179,33 +179,35 @@ const Results: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [regrading, setRegrading] = useState(false);
 
-  useEffect(() => {
+  const loadAssignments = React.useCallback(async () => {
     if (!user) return;
-    let active = true;
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('assignments')
-        .select('*')
-        .eq('teacher_id', user.id)
-        .order('updated_at', { ascending: false })
-        .limit(50);
-      if (!active) return;
-      if (error) {
-        toast.error('Could not load results');
-      } else {
-        setAssignments((data as Assignment[]) || []);
-        const requested = searchParams.get('id');
-        const initial = requested && data?.some((a) => a.id === requested) ? requested : data?.[0]?.id ?? null;
-        setSelectedId(initial);
-      }
-      setLoading(false);
-    })();
-    return () => { active = false; };
+    setLoading(true);
+    setError(null);
+    const { data, error: err } = await supabase
+      .from('assignments')
+      .select('*')
+      .eq('teacher_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(50);
+    if (err) {
+      setError(err.message || 'Could not load results');
+      toast.error('Could not load results');
+    } else {
+      setAssignments((data as Assignment[]) || []);
+      const requested = searchParams.get('id');
+      const initial = requested && data?.some((a) => a.id === requested) ? requested : data?.[0]?.id ?? null;
+      setSelectedId(initial);
+    }
+    setLoading(false);
   }, [user]);
+
+  useEffect(() => {
+    loadAssignments();
+  }, [loadAssignments]);
 
   const selected = useMemo(
     () => assignments.find((a) => a.id === selectedId) || null,
