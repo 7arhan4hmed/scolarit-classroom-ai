@@ -336,7 +336,7 @@ const Results: React.FC = () => {
             {/* MAIN COLUMN */}
             <div className="space-y-6 min-w-0">
               {/* HERO SUMMARY */}
-              <Card className="overflow-hidden border-0 shadow-lg">
+              <Card key={selected.id} className="overflow-hidden border-0 shadow-lg animate-fade-in">
                 <div className="blue-purple-gradient p-px rounded-lg">
                   <div className="bg-card rounded-[calc(var(--radius)-1px)] p-6 md:p-8">
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
