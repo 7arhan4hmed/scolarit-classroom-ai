@@ -162,9 +162,9 @@ const UploadAssignments = () => {
 
       toast({
         title: "Assignment uploaded successfully",
-        description: "Your graded assignment is now on your dashboard.",
+        description: "Opening your AI results…",
       });
-      navigate('/dashboard?uploaded=1');
+      navigate(`/results?id=${assignmentData.id}`);
     } catch (error) {
       console.error("Error saving assignment:", error);
       toast({
