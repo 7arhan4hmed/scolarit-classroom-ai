@@ -718,4 +718,151 @@ const EmptyResults: React.FC = () => {
   );
 };
 
+const ErrorState: React.FC<{ message: string; onRetry: () => void }> = ({ message, onRetry }) => (
+  <Card className="max-w-xl mx-auto">
+    <CardContent className="p-8 text-center">
+      <div className="mx-auto h-12 w-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mb-4">
+        <AlertCircle className="h-6 w-6" />
+      </div>
+      <h3 className="text-lg font-semibold mb-1">Something went wrong</h3>
+      <p className="text-sm text-muted-foreground mb-5">{message}</p>
+      <Button onClick={onRetry} className="blue-purple-gradient text-white border-0 hover:opacity-90">
+        <RefreshCw className="h-4 w-4" />
+        Try again
+      </Button>
+    </CardContent>
+  </Card>
+);
+
+// Lightweight heuristic annotator: classifies sentences as strong / improve / issue
+// based on length, hedging language, and passive constructions. Hover to see
+// the AI comment associated with that span.
+type Tone = 'strong' | 'improve' | 'issue' | 'neutral';
+const classifySentence = (s: string): Tone => {
+  const len = s.trim().split(/\s+/).length;
+  const lower = s.toLowerCase();
+  if (/\b(was|were|been|being)\s+\w+ed\b/.test(lower)) return 'improve'; // passive
+  if (len > 38) return 'issue'; // overly long
+  if (/\b(maybe|perhaps|kind of|sort of|i think|i feel)\b/.test(lower)) return 'improve';
+  if (len >= 10 && len <= 28 && /[,;:]/.test(s)) return 'strong';
+  if (len < 5) return 'neutral';
+  return 'neutral';
+};
+
+const AnnotatedContent: React.FC<{
+  content: string;
+  strengths: string[];
+  improvements: string[];
+  suggestions: string[];
+}> = ({ content, strengths, improvements, suggestions }) => {
+  const sentences = useMemo(() => {
+    // Split on sentence boundaries while preserving punctuation
+    return content.match(/[^.!?\n]+[.!?]?\s*/g)?.filter((s) => s.trim().length > 0) ?? [content];
+  }, [content]);
+
+  const commentFor = (tone: Tone, idx: number) => {
+    if (tone === 'strong') return strengths[idx % strengths.length] || 'Strong, well-constructed sentence.';
+    if (tone === 'improve') return improvements[idx % improvements.length] || 'Consider tightening this for clarity.';
+    if (tone === 'issue') return suggestions[idx % suggestions.length] || 'This sentence is long — try splitting it.';
+    return '';
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <FileText className="h-5 w-5 text-primary" />
+          Annotated Content
+        </CardTitle>
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-1">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Strong
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-500" /> Could improve
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-rose-500" /> Needs attention
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <TooltipProvider delayDuration={150}>
+          <div className="rounded-lg bg-muted/40 p-4 text-sm leading-relaxed max-h-96 overflow-y-auto">
+            {sentences.map((s, i) => {
+              const tone = classifySentence(s);
+              if (tone === 'neutral') {
+                return <span key={i}>{s}</span>;
+              }
+              const cls =
+                tone === 'strong'
+                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 border-b-2 border-emerald-500/40'
+                  : tone === 'improve'
+                  ? 'bg-amber-500/15 hover:bg-amber-500/25 border-b-2 border-amber-500/40'
+                  : 'bg-rose-500/15 hover:bg-rose-500/25 border-b-2 border-rose-500/40';
+              return (
+                <Tooltip key={i}>
+                  <TooltipTrigger asChild>
+                    <span className={cn('rounded-sm px-0.5 transition-colors cursor-help', cls)}>{s}</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs leading-relaxed">{commentFor(tone, i)}</p>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        </TooltipProvider>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ImprovementLoop: React.FC<{ suggestions: string[]; onResubmit: () => void }> = ({
+  suggestions,
+  onResubmit,
+}) => (
+  <Card className="overflow-hidden border-primary/20">
+    <div className="blue-purple-gradient h-1 w-full" />
+    <CardHeader>
+      <CardTitle className="text-lg flex items-center gap-2">
+        <Wand2 className="h-5 w-5 text-primary" />
+        Improve your assignment
+      </CardTitle>
+      <p className="text-sm text-muted-foreground">
+        Apply these targeted suggestions and re-upload to see your score climb.
+      </p>
+    </CardHeader>
+    <CardContent>
+      <ul className="space-y-2.5 mb-5">
+        {suggestions.slice(0, 4).map((s, i) => (
+          <li
+            key={i}
+            className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors group"
+          >
+            <span className="mt-0.5 h-6 w-6 rounded-full blue-purple-gradient text-white text-xs font-semibold flex items-center justify-center flex-shrink-0">
+              {i + 1}
+            </span>
+            <span className="text-sm text-foreground/90 leading-relaxed flex-1">{s}</span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all mt-1" />
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button
+          onClick={onResubmit}
+          className="blue-purple-gradient text-white border-0 hover:opacity-90 hover:shadow-md hover:shadow-primary/20 transition-all flex-1"
+        >
+          <UploadIcon className="h-4 w-4" />
+          Re-upload improved version
+        </Button>
+        <Button variant="outline" onClick={onResubmit} className="flex-1">
+          <Sparkles className="h-4 w-4" />
+          Apply suggestions
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 export default Results;
