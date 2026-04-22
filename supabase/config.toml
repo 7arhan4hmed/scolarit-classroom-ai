@@ -27,3 +27,6 @@ port = 54326
 
 [functions.generate-ai-feedback]
 verify_jwt = true
+
+[functions.apply-suggestions]
+verify_jwt = true
