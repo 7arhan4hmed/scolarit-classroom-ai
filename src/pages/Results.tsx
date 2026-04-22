@@ -244,47 +244,45 @@ const Results: React.FC = () => {
     };
   }, [selectedId]);
 
-  const score = detail?.score != null
-    ? Number(detail.score)
-    : selected?.grade != null
-      ? Number(selected.grade)
-      : 0;
-
-  const breakdown = useMemo(() => {
-    if (!selected) return [];
+  // DB-only score: use real per-criterion average if available, else stored overall score.
+  const score = useMemo(() => {
     if (detail && detail.structure_score != null) {
-      return [
-        { label: 'Structure', value: Number(detail.structure_score) },
-        { label: 'Clarity', value: Number(detail.clarity_score ?? 0) },
-        { label: 'Grammar', value: Number(detail.grammar_score ?? 0) },
-        { label: 'Evidence', value: Number(detail.evidence_score ?? 0) },
-      ];
+      const s = Number(detail.structure_score) || 0;
+      const c = Number(detail.clarity_score) || 0;
+      const g = Number(detail.grammar_score) || 0;
+      const e = Number(detail.evidence_score) || 0;
+      return Math.round((s + c + g + e) / 4);
     }
-    return buildBreakdown(score, selected.id);
-  }, [detail, selected, score]);
+    if (detail?.score != null) return Number(detail.score);
+    if (selected?.grade != null) return Number(selected.grade);
+    return 0;
+  }, [detail, selected]);
 
+  // DB-only breakdown — no heuristic generation.
+  const breakdown = useMemo(() => {
+    if (!detail || detail.structure_score == null) return [];
+    return [
+      { label: 'Structure', value: Number(detail.structure_score) || 0 },
+      { label: 'Clarity', value: Number(detail.clarity_score) || 0 },
+      { label: 'Grammar', value: Number(detail.grammar_score) || 0 },
+      { label: 'Evidence', value: Number(detail.evidence_score) || 0 },
+    ];
+  }, [detail]);
+
+  // DB-only feedback — no heuristic fallback content.
   const feedbackSections = useMemo(() => {
-    if (!selected) return null;
-    if (detail && (detail.strengths || detail.improvements || detail.suggestions)) {
-      const toArr = (v: any): string[] => {
-        if (Array.isArray(v)) return v.filter((s) => typeof s === 'string');
-        if (typeof v === 'string') return [v];
-        return [];
-      };
-      const s = toArr(detail.strengths);
-      const i = toArr(detail.improvements);
-      const g = toArr(detail.suggestions);
-      if (s.length || i.length || g.length) {
-        const fallback = buildFeedbackSections(selected.feedback, score);
-        return {
-          strengths: s.length ? s : fallback.strengths,
-          improvements: i.length ? i : fallback.improvements,
-          suggestions: g.length ? g : fallback.suggestions,
-        };
-      }
-    }
-    return buildFeedbackSections(selected.feedback, score);
-  }, [detail, selected, score]);
+    if (!detail) return null;
+    const toArr = (v: any): string[] => {
+      if (Array.isArray(v)) return v.filter((s) => typeof s === 'string');
+      if (typeof v === 'string') return [v];
+      return [];
+    };
+    const strengths = toArr(detail.strengths);
+    const improvements = toArr(detail.improvements);
+    const suggestions = toArr(detail.suggestions);
+    if (!strengths.length && !improvements.length && !suggestions.length) return null;
+    return { strengths, improvements, suggestions };
+  }, [detail]);
 
   const handleSelect = (id: string) => {
     setSelectedId(id);
