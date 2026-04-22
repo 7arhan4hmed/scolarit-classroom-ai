@@ -37,6 +37,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { fetchResultForAssignment, type ResultRow } from '@/hooks/useAssignments';
 
 interface Assignment {
   id: string;
@@ -214,15 +215,68 @@ const Results: React.FC = () => {
     [assignments, selectedId],
   );
 
-  const score = selected?.grade ? Number(selected.grade) : 0;
-  const breakdown = useMemo(
-    () => (selected ? buildBreakdown(score, selected.id) : []),
-    [selected, score],
-  );
-  const feedbackSections = useMemo(
-    () => (selected ? buildFeedbackSections(selected.feedback, score) : null),
-    [selected, score],
-  );
+  const [detail, setDetail] = useState<ResultRow | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setDetail(null);
+      return;
+    }
+    let cancelled = false;
+    setDetailLoading(true);
+    fetchResultForAssignment(selectedId)
+      .then((d) => {
+        if (!cancelled) setDetail(d);
+      })
+      .catch((e) => console.error('Failed to load result detail:', e))
+      .finally(() => !cancelled && setDetailLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId]);
+
+  const score = detail?.score != null
+    ? Number(detail.score)
+    : selected?.grade != null
+      ? Number(selected.grade)
+      : 0;
+
+  const breakdown = useMemo(() => {
+    if (!selected) return [];
+    if (detail && detail.structure_score != null) {
+      return [
+        { label: 'Structure', value: Number(detail.structure_score) },
+        { label: 'Clarity', value: Number(detail.clarity_score ?? 0) },
+        { label: 'Grammar', value: Number(detail.grammar_score ?? 0) },
+        { label: 'Evidence', value: Number(detail.evidence_score ?? 0) },
+      ];
+    }
+    return buildBreakdown(score, selected.id);
+  }, [detail, selected, score]);
+
+  const feedbackSections = useMemo(() => {
+    if (!selected) return null;
+    if (detail && (detail.strengths || detail.improvements || detail.suggestions)) {
+      const toArr = (v: any): string[] => {
+        if (Array.isArray(v)) return v.filter((s) => typeof s === 'string');
+        if (typeof v === 'string') return [v];
+        return [];
+      };
+      const s = toArr(detail.strengths);
+      const i = toArr(detail.improvements);
+      const g = toArr(detail.suggestions);
+      if (s.length || i.length || g.length) {
+        const fallback = buildFeedbackSections(selected.feedback, score);
+        return {
+          strengths: s.length ? s : fallback.strengths,
+          improvements: i.length ? i : fallback.improvements,
+          suggestions: g.length ? g : fallback.suggestions,
+        };
+      }
+    }
+    return buildFeedbackSections(selected.feedback, score);
+  }, [detail, selected, score]);
 
   const handleSelect = (id: string) => {
     setSelectedId(id);
