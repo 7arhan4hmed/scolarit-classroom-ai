@@ -11,7 +11,8 @@ import { useActivityLog } from '@/hooks/useActivityLog';
 import StepIndicator from '@/components/upload/StepIndicator';
 import UploadStep from '@/components/upload/UploadStep';
 import AssessmentStep from '@/components/upload/AssessmentStep';
-import ReviewStep from '@/components/upload/ReviewStep';
+import { extractTextFromFiles } from '@/services/fileParser';
+import { gradeAssignment } from '@/services/aiGrader';
 
 interface FileWithValidation {
   file: File;
@@ -22,166 +23,121 @@ interface FileWithValidation {
 }
 
 const UploadAssignments = () => {
-  const [step, setStep] = useState<'upload' | 'assessment' | 'review'>('upload');
+  const [step, setStep] = useState<'upload' | 'assessment'>('upload');
   const [files, setFiles] = useState<FileWithValidation[]>([]);
   const [textInput, setTextInput] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [assessment, setAssessment] = useState<{ grade: string; feedback: string } | null>(null);
   const [title, setTitle] = useState('');
   const [rubricId, setRubricId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { logActivity } = useActivityLog();
-  
+
   const handleSubmit = async () => {
-    setIsSubmitting(true);
-    setStep('assessment');
-    
-    try {
-      // Process first file if available (for now, batch processing would be future enhancement)
-      let fileData = null;
-      let fileType = null;
-
-      if (files.length > 0) {
-        const firstFile = files[0].file;
-        fileData = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(firstFile);
-        });
-        fileType = firstFile.type;
-      }
-
-      const { data, error } = await supabase.functions.invoke('generate-ai-feedback', {
-        body: {
-          assignmentText: textInput.trim(),
-          assignmentTitle: title,
-          rubricId: rubricId,
-          fileData,
-          fileType
-        }
-      });
-      
-      if (error) {
-        throw new Error(`Error generating AI feedback: ${error.message}`);
-      }
-      
-      if (data) {
-        setAssessment({
-          grade: data.grade || 'N/A',
-          feedback: data.feedback || 'No feedback provided'
-        });
-      }
-      
-      setStep('review');
+    if (!user) {
       toast({
-        title: "Assessment complete",
-        description: `Your assignment "${title}" has been graded.`,
+        title: 'Authentication required',
+        description: 'Please log in to grade assignments.',
+        variant: 'destructive',
       });
-    } catch (error) {
-      console.error("Error during assessment:", error);
-      toast({
-        title: "Assessment failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
-      });
-      setStep('upload');
-    } finally {
-      setIsSubmitting(false);
+      return;
     }
-  };
-  
-  const handleApprove = async () => {
-    if (!assessment) return;
-    
+
+    setStep('assessment');
+    let assignmentId: string | null = null;
+
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      if (!currentUser) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to save assignments.",
-          variant: "destructive",
-        });
-        return;
+      // 1. Extract text from files
+      let extracted = textInput.trim();
+      if (files.length > 0) {
+        const fromFiles = await extractTextFromFiles(files.map((f) => f.file));
+        extracted = extracted ? `${extracted}\n\n${fromFiles}` : fromFiles;
+      }
+      if (!extracted || extracted.length < 10) {
+        throw new Error('Could not read any content from your submission.');
       }
 
-      // Convert letter grade to numeric (simplified conversion)
-      const gradeMap: { [key: string]: number } = {
-        'A+': 97, 'A': 93, 'A-': 90,
-        'B+': 87, 'B': 83, 'B-': 80,
-        'C+': 77, 'C': 73, 'C-': 70,
-        'D+': 67, 'D': 63, 'D-': 60,
-        'F': 50
-      };
-      
-      const numericGrade = gradeMap[assessment.grade] || null;
+      // 2. Call AI grader
+      const result = await gradeAssignment({
+        assignmentTitle: title,
+        assignmentText: extracted,
+        rubricId,
+      });
 
-      const fileNames = files.map(f => f.file.name).join(', ');
-      const contentDescription = textInput || (files.length > 0 ? `[Files: ${fileNames}]` : null);
-
-      const { data: assignmentData, error } = await supabase
+      // 3. Save assignment
+      const { data: assignmentData, error: assignmentError } = await supabase
         .from('assignments')
         .insert({
-          teacher_id: currentUser.id,
-          title: title,
-          content: contentDescription,
-          grade: numericGrade,
-          feedback: assessment.feedback,
+          teacher_id: user.id,
+          title,
+          content: extracted.substring(0, 50000),
+          grade: result.score,
+          feedback: result.summary,
           status: 'completed',
           rubric_id: rubricId,
-          time_saved_minutes: 15 * files.length || 15
+          time_saved_minutes: 15 + files.length * 10,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (assignmentError) throw assignmentError;
+      assignmentId = assignmentData.id;
 
-      // Log file uploads
-      if (files.length > 0 && assignmentData) {
-        const fileUploads = files.map(f => ({
-          user_id: currentUser.id,
-          assignment_id: assignmentData.id,
-          file_name: f.file.name,
-          file_type: f.file.type,
-          file_size: f.file.size,
-          status: 'uploaded'
-        }));
+      // 4. Save detailed result
+      const { error: resultError } = await supabase.from('results').insert({
+        assignment_id: assignmentData.id,
+        user_id: user.id,
+        grade: result.grade,
+        score: result.score,
+        structure_score: result.criteria.structure,
+        clarity_score: result.criteria.clarity,
+        grammar_score: result.criteria.grammar,
+        evidence_score: result.criteria.evidence,
+        summary: result.summary,
+        strengths: result.strengths,
+        improvements: result.improvements,
+        suggestions: result.suggestions,
+      });
+      if (resultError) console.error('Result insert failed:', resultError);
 
-        await supabase.from('file_uploads').insert(fileUploads);
+      // 5. Save file metadata
+      if (files.length > 0) {
+        await supabase.from('file_uploads').insert(
+          files.map((f) => ({
+            user_id: user.id,
+            assignment_id: assignmentData.id,
+            file_name: f.file.name,
+            file_type: f.file.type || 'application/octet-stream',
+            file_size: f.file.size,
+            status: 'processed',
+          })),
+        );
       }
 
-      // Log activity
-      await logActivity('assignment_graded', 'assignment', assignmentData?.id, {
+      await logActivity('assignment_graded', 'assignment', assignmentData.id, {
         title,
-        grade: assessment.grade,
-        rubric_id: rubricId
+        grade: result.grade,
+        score: result.score,
       });
 
       toast({
-        title: "Assignment uploaded successfully",
-        description: "Opening your AI results…",
+        title: 'Grading complete',
+        description: `${result.grade} • ${result.score}/100`,
       });
       navigate(`/results?id=${assignmentData.id}`);
     } catch (error) {
-      console.error("Error saving assignment:", error);
+      console.error('Upload/grading failed:', error);
+      // Rollback: delete assignment if it was created but result/log failed
+      if (assignmentId) {
+        await supabase.from('assignments').delete().eq('id', assignmentId);
+      }
       toast({
-        title: "Failed to save",
-        description: error instanceof Error ? error.message : "An error occurred while saving the assignment.",
-        variant: "destructive"
+        title: 'Grading failed',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
+        variant: 'destructive',
       });
+      setStep('upload');
     }
-  };
-  
-  const handleReset = () => {
-    setFiles([]);
-    setTextInput('');
-    setTitle('');
-    setRubricId(null);
-    setAssessment(null);
-    setStep('upload');
   };
 
   return (
@@ -211,17 +167,7 @@ const UploadAssignments = () => {
                 />
               )}
               
-              {step === 'assessment' && (
-                <AssessmentStep title={title} />
-              )}
-              
-              {step === 'review' && assessment && (
-                <ReviewStep 
-                  assessment={assessment}
-                  onApprove={handleApprove}
-                  onReset={handleReset}
-                />
-              )}
+              {step === 'assessment' && <AssessmentStep title={title} />}
             </Card>
           </div>
         </div>
