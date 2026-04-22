@@ -10,6 +10,14 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Sparkles,
   CheckCircle2,
   AlertTriangle,
@@ -236,47 +244,45 @@ const Results: React.FC = () => {
     };
   }, [selectedId]);
 
-  const score = detail?.score != null
-    ? Number(detail.score)
-    : selected?.grade != null
-      ? Number(selected.grade)
-      : 0;
-
-  const breakdown = useMemo(() => {
-    if (!selected) return [];
+  // DB-only score: use real per-criterion average if available, else stored overall score.
+  const score = useMemo(() => {
     if (detail && detail.structure_score != null) {
-      return [
-        { label: 'Structure', value: Number(detail.structure_score) },
-        { label: 'Clarity', value: Number(detail.clarity_score ?? 0) },
-        { label: 'Grammar', value: Number(detail.grammar_score ?? 0) },
-        { label: 'Evidence', value: Number(detail.evidence_score ?? 0) },
-      ];
+      const s = Number(detail.structure_score) || 0;
+      const c = Number(detail.clarity_score) || 0;
+      const g = Number(detail.grammar_score) || 0;
+      const e = Number(detail.evidence_score) || 0;
+      return Math.round((s + c + g + e) / 4);
     }
-    return buildBreakdown(score, selected.id);
-  }, [detail, selected, score]);
+    if (detail?.score != null) return Number(detail.score);
+    if (selected?.grade != null) return Number(selected.grade);
+    return 0;
+  }, [detail, selected]);
 
+  // DB-only breakdown — no heuristic generation.
+  const breakdown = useMemo(() => {
+    if (!detail || detail.structure_score == null) return [];
+    return [
+      { label: 'Structure', value: Number(detail.structure_score) || 0 },
+      { label: 'Clarity', value: Number(detail.clarity_score) || 0 },
+      { label: 'Grammar', value: Number(detail.grammar_score) || 0 },
+      { label: 'Evidence', value: Number(detail.evidence_score) || 0 },
+    ];
+  }, [detail]);
+
+  // DB-only feedback — no heuristic fallback content.
   const feedbackSections = useMemo(() => {
-    if (!selected) return null;
-    if (detail && (detail.strengths || detail.improvements || detail.suggestions)) {
-      const toArr = (v: any): string[] => {
-        if (Array.isArray(v)) return v.filter((s) => typeof s === 'string');
-        if (typeof v === 'string') return [v];
-        return [];
-      };
-      const s = toArr(detail.strengths);
-      const i = toArr(detail.improvements);
-      const g = toArr(detail.suggestions);
-      if (s.length || i.length || g.length) {
-        const fallback = buildFeedbackSections(selected.feedback, score);
-        return {
-          strengths: s.length ? s : fallback.strengths,
-          improvements: i.length ? i : fallback.improvements,
-          suggestions: g.length ? g : fallback.suggestions,
-        };
-      }
-    }
-    return buildFeedbackSections(selected.feedback, score);
-  }, [detail, selected, score]);
+    if (!detail) return null;
+    const toArr = (v: any): string[] => {
+      if (Array.isArray(v)) return v.filter((s) => typeof s === 'string');
+      if (typeof v === 'string') return [v];
+      return [];
+    };
+    const strengths = toArr(detail.strengths);
+    const improvements = toArr(detail.improvements);
+    const suggestions = toArr(detail.suggestions);
+    if (!strengths.length && !improvements.length && !suggestions.length) return null;
+    return { strengths, improvements, suggestions };
+  }, [detail]);
 
   const handleSelect = (id: string) => {
     setSelectedId(id);
@@ -488,6 +494,7 @@ const Results: React.FC = () => {
               {feedbackSections && (
                 <ImprovementLoop
                   suggestions={feedbackSections.suggestions}
+                  originalText={selected.content || ''}
                   onResubmit={() => navigate('/upload')}
                 />
               )}
@@ -872,51 +879,135 @@ const AnnotatedContent: React.FC<{
   );
 };
 
-const ImprovementLoop: React.FC<{ suggestions: string[]; onResubmit: () => void }> = ({
-  suggestions,
-  onResubmit,
-}) => (
-  <Card className="overflow-hidden border-primary/20">
-    <div className="blue-purple-gradient h-1 w-full" />
-    <CardHeader>
-      <CardTitle className="text-lg flex items-center gap-2">
-        <Wand2 className="h-5 w-5 text-primary" />
-        Improve your assignment
-      </CardTitle>
-      <p className="text-sm text-muted-foreground">
-        Apply these targeted suggestions and re-upload to see your score climb.
-      </p>
-    </CardHeader>
-    <CardContent>
-      <ul className="space-y-2.5 mb-5">
-        {suggestions.slice(0, 4).map((s, i) => (
-          <li
-            key={i}
-            className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors group"
-          >
-            <span className="mt-0.5 h-6 w-6 rounded-full blue-purple-gradient text-white text-xs font-semibold flex items-center justify-center flex-shrink-0">
-              {i + 1}
-            </span>
-            <span className="text-sm text-foreground/90 leading-relaxed flex-1">{s}</span>
-            <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all mt-1" />
-          </li>
-        ))}
-      </ul>
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Button
-          onClick={onResubmit}
-          className="blue-purple-gradient text-white border-0 hover:opacity-90 hover:shadow-md hover:shadow-primary/20 transition-all flex-1"
-        >
-          <UploadIcon className="h-4 w-4" />
-          Re-upload improved version
-        </Button>
-        <Button variant="outline" onClick={onResubmit} className="flex-1">
-          <Sparkles className="h-4 w-4" />
-          Apply suggestions
-        </Button>
-      </div>
-    </CardContent>
-  </Card>
-);
+const ImprovementLoop: React.FC<{
+  suggestions: string[];
+  originalText: string;
+  onResubmit: () => void;
+}> = ({ suggestions, originalText, onResubmit }) => {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [improved, setImproved] = useState<string>('');
+
+  const handleApply = async () => {
+    if (!originalText || originalText.trim().length < 10) {
+      toast.error('No original text available to improve.');
+      return;
+    }
+    if (!suggestions.length) {
+      toast.error('No suggestions available.');
+      return;
+    }
+    setLoading(true);
+    setOpen(true);
+    setImproved('');
+    try {
+      const { data, error } = await supabase.functions.invoke('apply-suggestions', {
+        body: { originalText, suggestions },
+      });
+      if (error) throw error;
+      if (!data?.improvedText) throw new Error('AI returned no improved text.');
+      setImproved(data.improvedText);
+      toast.success('Suggestions applied');
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to apply suggestions');
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(improved);
+      toast.success('Improved text copied');
+    } catch {
+      toast.error('Could not copy');
+    }
+  };
+
+  return (
+    <>
+      <Card className="overflow-hidden border-primary/20">
+        <div className="blue-purple-gradient h-1 w-full" />
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-primary" />
+            Improve your assignment
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Apply these targeted suggestions and re-upload to see your score climb.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2.5 mb-5">
+            {suggestions.slice(0, 4).map((s, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-3 p-3 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors group"
+              >
+                <span className="mt-0.5 h-6 w-6 rounded-full blue-purple-gradient text-white text-xs font-semibold flex items-center justify-center flex-shrink-0">
+                  {i + 1}
+                </span>
+                <span className="text-sm text-foreground/90 leading-relaxed flex-1">{s}</span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all mt-1" />
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              onClick={handleApply}
+              disabled={loading}
+              className="blue-purple-gradient text-white border-0 hover:opacity-90 hover:shadow-md hover:shadow-primary/20 transition-all flex-1"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Apply suggestions with AI
+            </Button>
+            <Button variant="outline" onClick={onResubmit} className="flex-1">
+              <UploadIcon className="h-4 w-4" />
+              Re-upload improved version
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              AI-Improved Version
+            </DialogTitle>
+            <DialogDescription>
+              Gemini rewrote your text by applying every suggestion above. Review and copy below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg bg-muted/40 p-4 max-h-[50vh] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">
+            {loading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Rewriting your text with AI…
+              </div>
+            ) : improved ? (
+              improved
+            ) : (
+              <span className="text-muted-foreground">No content yet.</span>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Close</Button>
+            <Button
+              onClick={handleCopy}
+              disabled={!improved || loading}
+              className="blue-purple-gradient text-white border-0 hover:opacity-90"
+            >
+              <Download className="h-4 w-4" />
+              Copy improved text
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
 
 export default Results;

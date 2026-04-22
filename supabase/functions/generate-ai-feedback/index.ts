@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -9,22 +8,59 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const RUBRIC_DESCRIPTIONS: Record<string, string> = {
-  "00000000-0000-0000-0000-000000000001":
-    "Essay Grading: Thesis & Argument (25%), Evidence & Support (25%), Organization (20%), Grammar & Style (20%), Citations (10%)",
-  "00000000-0000-0000-0000-000000000002":
-    "Research Paper: Research Quality (30%), Analysis (25%), Structure (20%), Writing Quality (15%), References (10%)",
-  "00000000-0000-0000-0000-000000000003":
-    "Creative Writing: Creativity (30%), Voice & Tone (25%), Plot/Structure (20%), Character Development (15%), Technical Skill (10%)",
-  "00000000-0000-0000-0000-000000000004":
-    "Technical Report: Technical Accuracy (30%), Clarity (25%), Completeness (20%), Format (15%), Visuals (10%)",
-};
-
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+
+const FALLBACK = {
+  grade: "C",
+  score: 60,
+  summary: "Fallback",
+  criteria: { structure: 60, clarity: 60, grammar: 60, evidence: 60 },
+  strengths: [] as string[],
+  improvements: [] as string[],
+  suggestions: [] as string[],
+};
+
+const clamp = (n: unknown, fallback = 60) => {
+  const v = Number(n);
+  if (!Number.isFinite(v) || v <= 0) return fallback;
+  return Math.max(1, Math.min(100, Math.round(v)));
+};
+
+const letterFromScore = (s: number): string => {
+  if (s >= 93) return "A";
+  if (s >= 90) return "A-";
+  if (s >= 87) return "B+";
+  if (s >= 83) return "B";
+  if (s >= 80) return "B-";
+  if (s >= 77) return "C+";
+  if (s >= 73) return "C";
+  if (s >= 70) return "C-";
+  if (s >= 67) return "D+";
+  if (s >= 60) return "D";
+  return "F";
+};
+
+/** Strip ``` fences, language tags, and trim outside the outer { ... } */
+const cleanJson = (raw: string): string => {
+  let t = (raw || "").trim();
+  // Remove markdown fences ```json ... ``` or ``` ... ```
+  t = t.replace(/```(?:json)?/gi, "```");
+  t = t.replace(/```/g, "");
+  // Trim to outermost {...}
+  const first = t.indexOf("{");
+  const last = t.lastIndexOf("}");
+  if (first !== -1 && last !== -1 && last > first) {
+    t = t.slice(first, last + 1);
+  }
+  return t.trim();
+};
+
+const safeArr = (v: unknown): string[] =>
+  Array.isArray(v) ? v.filter((x) => typeof x === "string" && x.trim()).slice(0, 5) : [];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -32,10 +68,10 @@ serve(async (req) => {
   }
 
   try {
-    const { assignmentText, assignmentTitle, rubricId } = await req.json();
+    const { assignmentText, assignmentTitle } = await req.json();
 
-    const content = (assignmentText || "").trim();
-    if (content.length < 10) {
+    const text = (assignmentText || "").trim();
+    if (text.length < 10) {
       return json(
         { error: "Assignment content is required (extracted text was empty)." },
         400,
@@ -46,15 +82,27 @@ serve(async (req) => {
       return json({ error: "AI service is not configured" }, 500);
     }
 
-    const rubricContext = rubricId && RUBRIC_DESCRIPTIONS[rubricId]
-      ? RUBRIC_DESCRIPTIONS[rubricId]
-      : "Standard academic grading criteria";
+    const prompt = `Return ONLY valid JSON. No text.
 
-    const systemPrompt =
-      `You are an expert educational grader. Grade the student assignment using the rubric below and respond ONLY by calling the submit_grading function. Be honest, specific and constructive.\n\nRubric: ${rubricContext}`;
+{
+"grade": "A",
+"score": number,
+"summary": string,
+"criteria": {
+"structure": number,
+"clarity": number,
+"grammar": number,
+"evidence": number
+},
+"strengths": string[],
+"improvements": string[],
+"suggestions": string[]
+}
 
-    const userPrompt =
-      `Title: ${assignmentTitle || "Untitled Assignment"}\n\nAssignment content:\n${content.substring(0, 15000)}`;
+Title: ${assignmentTitle || "Untitled Assignment"}
+
+Text:
+${text.substring(0, 15000)}`;
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -66,83 +114,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "submit_grading",
-                description:
-                  "Submit the structured grading result for the student's assignment.",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    grade: {
-                      type: "string",
-                      enum: [
-                        "A+", "A", "A-", "B+", "B", "B-",
-                        "C+", "C", "C-", "D+", "D", "D-", "F",
-                      ],
-                    },
-                    score: {
-                      type: "number",
-                      description: "Overall score 0-100",
-                    },
-                    summary: {
-                      type: "string",
-                      description: "1-2 sentence overall feedback summary",
-                    },
-                    criteria: {
-                      type: "object",
-                      properties: {
-                        structure: { type: "number" },
-                        clarity: { type: "number" },
-                        grammar: { type: "number" },
-                        evidence: { type: "number" },
-                      },
-                      required: ["structure", "clarity", "grammar", "evidence"],
-                      additionalProperties: false,
-                    },
-                    strengths: {
-                      type: "array",
-                      items: { type: "string" },
-                      minItems: 2,
-                      maxItems: 5,
-                    },
-                    improvements: {
-                      type: "array",
-                      items: { type: "string" },
-                      minItems: 2,
-                      maxItems: 5,
-                    },
-                    suggestions: {
-                      type: "array",
-                      items: { type: "string" },
-                      minItems: 2,
-                      maxItems: 5,
-                    },
-                  },
-                  required: [
-                    "grade",
-                    "score",
-                    "summary",
-                    "criteria",
-                    "strengths",
-                    "improvements",
-                    "suggestions",
-                  ],
-                  additionalProperties: false,
-                },
-              },
-            },
-          ],
-          tool_choice: {
-            type: "function",
-            function: { name: "submit_grading" },
-          },
+          messages: [{ role: "user", content: prompt }],
         }),
       },
     );
@@ -151,64 +123,58 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error("AI Gateway error:", response.status, errorText);
       if (response.status === 429) {
-        return json(
-          { error: "Rate limit exceeded. Please try again shortly." },
-          429,
-        );
+        return json({ error: "Rate limit exceeded. Please try again shortly." }, 429);
       }
       if (response.status === 402) {
-        return json(
-          { error: "AI credits exhausted. Please add credits to continue." },
-          402,
-        );
+        return json({ error: "AI credits exhausted. Please add credits to continue." }, 402);
       }
       return json({ error: "Failed to generate feedback" }, 500);
     }
 
     const data = await response.json();
-    const toolCall = data?.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      console.error("No tool call in AI response:", JSON.stringify(data));
-      return json({ error: "AI returned an invalid response" }, 502);
-    }
+    const raw: string = data?.choices?.[0]?.message?.content ?? "";
+    const cleaned = cleanJson(raw);
 
-    let parsed: any;
+    let parsed: any = null;
     try {
-      parsed = JSON.parse(toolCall.function.arguments);
+      parsed = JSON.parse(cleaned);
     } catch (e) {
-      console.error("Failed to parse tool args:", toolCall.function.arguments);
-      return json({ error: "AI returned malformed JSON" }, 502);
+      console.error("JSON parse failed. Raw:", raw);
+      return json(FALLBACK);
     }
 
-    // Normalize / clamp
-    const clamp = (n: any) => {
-      const v = Number(n);
-      if (!Number.isFinite(v)) return 0;
-      return Math.max(0, Math.min(100, Math.round(v)));
+    const criteria = {
+      structure: clamp(parsed?.criteria?.structure),
+      clarity: clamp(parsed?.criteria?.clarity),
+      grammar: clamp(parsed?.criteria?.grammar),
+      evidence: clamp(parsed?.criteria?.evidence),
     };
 
+    // score = avg(criteria) — always derived so it stays consistent
+    const score = Math.round(
+      (criteria.structure + criteria.clarity + criteria.grammar + criteria.evidence) / 4,
+    );
+
+    const grade = typeof parsed?.grade === "string" && parsed.grade.trim()
+      ? parsed.grade.trim()
+      : letterFromScore(score);
+
     const result = {
-      grade: String(parsed.grade || "B"),
-      score: clamp(parsed.score),
-      summary: String(parsed.summary || ""),
-      criteria: {
-        structure: clamp(parsed.criteria?.structure),
-        clarity: clamp(parsed.criteria?.clarity),
-        grammar: clamp(parsed.criteria?.grammar),
-        evidence: clamp(parsed.criteria?.evidence),
-      },
-      strengths: Array.isArray(parsed.strengths) ? parsed.strengths.slice(0, 5) : [],
-      improvements: Array.isArray(parsed.improvements) ? parsed.improvements.slice(0, 5) : [],
-      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions.slice(0, 5) : [],
+      grade,
+      score,
+      summary: typeof parsed?.summary === "string" && parsed.summary.trim()
+        ? parsed.summary.trim()
+        : "Graded by AI.",
+      criteria,
+      strengths: safeArr(parsed?.strengths),
+      improvements: safeArr(parsed?.improvements),
+      suggestions: safeArr(parsed?.suggestions),
     };
 
     console.log(`Graded "${assignmentTitle}": ${result.grade} (${result.score})`);
     return json(result);
   } catch (error) {
     console.error("Error in generate-ai-feedback function:", error);
-    return json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
-      500,
-    );
+    return json(FALLBACK);
   }
 });
