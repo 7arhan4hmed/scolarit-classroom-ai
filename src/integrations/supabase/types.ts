@@ -171,6 +171,65 @@ export type Database = {
         }
         Relationships: []
       }
+      results: {
+        Row: {
+          assignment_id: string | null
+          clarity_score: number | null
+          created_at: string | null
+          evidence_score: number | null
+          grade: string | null
+          grammar_score: number | null
+          id: string
+          improvements: Json | null
+          score: number | null
+          strengths: Json | null
+          structure_score: number | null
+          suggestions: Json | null
+          summary: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assignment_id?: string | null
+          clarity_score?: number | null
+          created_at?: string | null
+          evidence_score?: number | null
+          grade?: string | null
+          grammar_score?: number | null
+          id?: string
+          improvements?: Json | null
+          score?: number | null
+          strengths?: Json | null
+          structure_score?: number | null
+          suggestions?: Json | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assignment_id?: string | null
+          clarity_score?: number | null
+          created_at?: string | null
+          evidence_score?: number | null
+          grade?: string | null
+          grammar_score?: number | null
+          id?: string
+          improvements?: Json | null
+          score?: number | null
+          strengths?: Json | null
+          structure_score?: number | null
+          suggestions?: Json | null
+          summary?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rubrics: {
         Row: {
           created_at: string
