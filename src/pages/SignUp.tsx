@@ -172,12 +172,16 @@ const SignUp = () => {
                         type="button"
                         variant="outline"
                         size="sm"
-                        disabled={isResending}
+                        disabled={isResending || cooldownActive}
                         onClick={handleResendEmail}
                         className="h-8 gap-1.5 border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100"
                       >
                         <MailCheck size={14} />
-                        {isResending ? 'Sending...' : 'Resend verification email'}
+                        {isResending
+                          ? 'Sending...'
+                          : cooldownActive
+                            ? `Resend in ${cooldownSeconds}s`
+                            : 'Resend verification email'}
                       </Button>
                     )}
                   </div>
