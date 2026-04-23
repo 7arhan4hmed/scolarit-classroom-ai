@@ -144,6 +144,41 @@ const SignUp = () => {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              {errorMsg && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-2 rounded-[10px] border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+                >
+                  <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                  <p className="font-medium leading-snug">{errorMsg}</p>
+                </div>
+              )}
+
+              {successMsg && (
+                <div
+                  role="status"
+                  className="flex gap-2 rounded-[10px] border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800"
+                >
+                  <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <p className="font-medium leading-snug">{successMsg}</p>
+                    {signedUpEmail && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isResending}
+                        onClick={handleResendEmail}
+                        className="h-8 gap-1.5 border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100"
+                      >
+                        <MailCheck size={14} />
+                        {isResending ? 'Sending...' : 'Resend verification email'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="name"
