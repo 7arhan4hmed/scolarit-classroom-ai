@@ -10,6 +10,7 @@ import { ArrowRight, AlertCircle, CheckCircle2, MailCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import EmailField from './EmailField';
 import PasswordField from './PasswordField';
+import useResendCooldown from '@/hooks/useResendCooldown';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -31,6 +32,7 @@ const LoginForm = ({ userType }: LoginFormProps) => {
   const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { seconds: cooldownSeconds, isActive: cooldownActive, start: startCooldown } = useResendCooldown(30);
   const accentColor = userType === 'teacher' ? '#4F46E5' : '#7C3AED';
 
   const form = useForm<FormValues>({
@@ -61,6 +63,8 @@ const LoginForm = ({ userType }: LoginFormProps) => {
           code === 'invalid_credentials'
         ) {
           setErrorMsg('Incorrect email or password.');
+        } else if (raw.includes('user already registered') || raw.includes('already registered')) {
+          setErrorMsg('This email is already registered. Try logging in.');
         } else {
           setErrorMsg(error.message);
         }
@@ -98,6 +102,7 @@ const LoginForm = ({ userType }: LoginFormProps) => {
       setErrorMsg('Enter your email above first.');
       return;
     }
+    if (cooldownActive) return;
     setIsResending(true);
     setSuccessMsg(null);
     try {
@@ -109,6 +114,7 @@ const LoginForm = ({ userType }: LoginFormProps) => {
       if (error) throw error;
       setErrorMsg(null);
       setSuccessMsg(`Verification email sent to ${email}. Check your inbox.`);
+      startCooldown(30);
     } catch (error: any) {
       setErrorMsg(error?.message || 'Could not resend verification email.');
     } finally {
@@ -132,12 +138,16 @@ const LoginForm = ({ userType }: LoginFormProps) => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={isResending}
+                  disabled={isResending || cooldownActive}
                   onClick={handleResendEmail}
                   className="h-8 gap-1.5 border-destructive/30 bg-white text-destructive hover:bg-destructive/10"
                 >
                   <MailCheck size={14} />
-                  {isResending ? 'Sending...' : 'Resend verification email'}
+                  {isResending
+                    ? 'Sending...'
+                    : cooldownActive
+                      ? `Resend in ${cooldownSeconds}s`
+                      : 'Resend verification email'}
                 </Button>
               )}
             </div>
