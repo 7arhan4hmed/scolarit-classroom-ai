@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, AlertCircle, CheckCircle2, MailCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import EmailField from './EmailField';
 import PasswordField from './PasswordField';
@@ -24,6 +24,11 @@ interface LoginFormProps {
 
 const LoginForm = ({ userType }: LoginFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string>('');
+  const [isResending, setIsResending] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const accentColor = userType === 'teacher' ? '#4F46E5' : '#7C3AED';
@@ -35,23 +40,42 @@ const LoginForm = ({ userType }: LoginFormProps) => {
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    setNeedsVerification(false);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
-      if (error) throw error;
+      if (error) {
+        const raw = (error.message || '').toLowerCase();
+        const code = (error as any).code as string | undefined;
+        if (raw.includes('email not confirmed') || code === 'email_not_confirmed') {
+          setUnverifiedEmail(values.email);
+          setNeedsVerification(true);
+          setErrorMsg('Please verify your email before logging in.');
+        } else if (
+          raw.includes('invalid login credentials') ||
+          raw.includes('invalid_credentials') ||
+          code === 'invalid_credentials'
+        ) {
+          setErrorMsg('Incorrect email or password.');
+        } else {
+          setErrorMsg(error.message);
+        }
+        setIsLoading(false);
+        return;
+      }
 
       const userMetadata = data.user?.user_metadata;
       const actualUserType = userMetadata?.user_type || 'student';
 
       if (actualUserType !== userType) {
         await supabase.auth.signOut();
-        toast({
-          variant: 'destructive',
-          title: 'Login failed',
-          description: `You're trying to log in as a ${userType}, but your account is registered as a ${actualUserType}.`,
-        });
+        setErrorMsg(
+          `You're trying to log in as a ${userType}, but your account is registered as a ${actualUserType}.`
+        );
         setIsLoading(false);
         return;
       }
@@ -62,19 +86,74 @@ const LoginForm = ({ userType }: LoginFormProps) => {
       });
       navigate('/dashboard');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Login failed',
-        description: error.message || 'Please check your credentials and try again.',
-      });
+      setErrorMsg(error?.message || 'Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    const email = unverifiedEmail || form.getValues('email');
+    if (!email) {
+      setErrorMsg('Enter your email above first.');
+      return;
+    }
+    setIsResending(true);
+    setSuccessMsg(null);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      setErrorMsg(null);
+      setSuccessMsg(`Verification email sent to ${email}. Check your inbox.`);
+    } catch (error: any) {
+      setErrorMsg(error?.message || 'Could not resend verification email.');
+    } finally {
+      setIsResending(false);
     }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        {errorMsg && (
+          <div
+            role="alert"
+            className="flex gap-2 rounded-[10px] border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-sm text-destructive"
+          >
+            <AlertCircle size={16} className="mt-0.5 shrink-0" />
+            <div className="flex-1 space-y-2">
+              <p className="font-medium leading-snug">{errorMsg}</p>
+              {needsVerification && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isResending}
+                  onClick={handleResendEmail}
+                  className="h-8 gap-1.5 border-destructive/30 bg-white text-destructive hover:bg-destructive/10"
+                >
+                  <MailCheck size={14} />
+                  {isResending ? 'Sending...' : 'Resend verification email'}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {successMsg && (
+          <div
+            role="status"
+            className="flex items-start gap-2 rounded-[10px] border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-800"
+          >
+            <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+            <p className="font-medium leading-snug">{successMsg}</p>
+          </div>
+        )}
+
         <EmailField
           control={form.control}
           disabled={isLoading}

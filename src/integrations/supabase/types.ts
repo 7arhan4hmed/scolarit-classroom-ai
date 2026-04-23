@@ -58,6 +58,7 @@ export type Database = {
           time_saved_minutes: number | null
           title: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           content?: string | null
@@ -72,6 +73,7 @@ export type Database = {
           time_saved_minutes?: number | null
           title: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           content?: string | null
@@ -86,6 +88,7 @@ export type Database = {
           time_saved_minutes?: number | null
           title?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
