@@ -27,6 +27,7 @@ import {
   Bar,
 } from 'recharts';
 import { FileText, GraduationCap, TrendingUp, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const TeacherDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -101,10 +102,34 @@ const TeacherDashboard = () => {
   if (!isTeacher) return null;
 
   const statCards = [
-    { label: 'Total Submissions', value: stats.totalSubmissions, icon: FileText },
-    { label: 'Average Score', value: `${stats.averageScore}%`, icon: TrendingUp },
-    { label: 'Total Students', value: stats.totalStudents, icon: Users },
-    { label: 'Recent (7 days)', value: stats.recentCount, icon: GraduationCap },
+    {
+      label: 'Total Submissions',
+      value: stats.totalSubmissions,
+      icon: FileText,
+      gradient: 'from-blue-500/10 via-blue-500/5 to-transparent',
+      iconBg: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    },
+    {
+      label: 'Average Score',
+      value: `${stats.averageScore}%`,
+      icon: TrendingUp,
+      gradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
+      iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    },
+    {
+      label: 'Total Students',
+      value: stats.totalStudents,
+      icon: Users,
+      gradient: 'from-violet-500/10 via-violet-500/5 to-transparent',
+      iconBg: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+    },
+    {
+      label: 'Latest Activity (7d)',
+      value: stats.recentCount,
+      icon: GraduationCap,
+      gradient: 'from-amber-500/10 via-amber-500/5 to-transparent',
+      iconBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    },
   ];
 
   return (
@@ -112,28 +137,42 @@ const TeacherDashboard = () => {
       <Header />
       <main className="flex-grow py-8 md:py-12">
         <div className="container mx-auto px-4 max-w-7xl space-y-8">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Teacher Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              Review submissions, scores, and class performance.
+          <div className="animate-fade-in">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+              Teacher Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-2 text-base">
+              Track student performance and insights.
             </p>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {statCards.map((c) => (
-              <Card key={c.label}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+            {statCards.map((c, i) => (
+              <Card
+                key={c.label}
+                className={cn(
+                  'relative overflow-hidden border bg-gradient-to-br shadow-sm',
+                  'transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5',
+                  c.gradient
+                )}
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{c.label}</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-muted-foreground">{c.label}</p>
                       {loading ? (
-                        <Skeleton className="h-7 w-16 mt-2" />
+                        <Skeleton className="h-8 w-20 mt-2" />
                       ) : (
-                        <p className="text-2xl font-bold mt-1">{c.value}</p>
+                        <p className="text-3xl font-bold mt-1 tabular-nums tracking-tight text-foreground">
+                          {c.value}
+                        </p>
                       )}
                     </div>
-                    <c.icon className="h-5 w-5 text-muted-foreground" />
+                    <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center shrink-0', c.iconBg)}>
+                      <c.icon className="h-5 w-5" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -141,16 +180,18 @@ const TeacherDashboard = () => {
           </div>
 
           {/* Analytics */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Average Score Trend</CardTitle>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in">
+            <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Average Score Trend</CardTitle>
+                <p className="text-xs text-muted-foreground">Daily averages across submissions</p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {scoreTrend.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-12 text-center">
-                    No scored submissions yet.
-                  </p>
+                  <div className="py-14 text-center">
+                    <TrendingUp className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                    <p className="text-sm text-muted-foreground">No scored submissions yet.</p>
+                  </div>
                 ) : (
                   <ChartContainer
                     config={{ score: { label: 'Score', color: 'hsl(var(--primary))' } }}
@@ -167,6 +208,7 @@ const TeacherDashboard = () => {
                         stroke="var(--color-score)"
                         strokeWidth={2}
                         dot={{ r: 3 }}
+                        animationDuration={800}
                       />
                     </LineChart>
                   </ChartContainer>
@@ -174,15 +216,17 @@ const TeacherDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Grade Distribution</CardTitle>
+            <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">Grade Distribution</CardTitle>
+                <p className="text-xs text-muted-foreground">How grades are spread across your class</p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {gradeDistribution.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-12 text-center">
-                    No grades yet.
-                  </p>
+                  <div className="py-14 text-center">
+                    <GraduationCap className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                    <p className="text-sm text-muted-foreground">No grades yet.</p>
+                  </div>
                 ) : (
                   <ChartContainer
                     config={{ count: { label: 'Count', color: 'hsl(var(--primary))' } }}
@@ -193,7 +237,7 @@ const TeacherDashboard = () => {
                       <XAxis dataKey="grade" tickLine={false} axisLine={false} />
                       <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="count" fill="var(--color-count)" radius={[6, 6, 0, 0]} animationDuration={800} />
                     </BarChart>
                   </ChartContainer>
                 )}
@@ -202,11 +246,11 @@ const TeacherDashboard = () => {
           </div>
 
           {/* Submissions */}
-          <section className="space-y-4">
+          <section className="space-y-4 animate-fade-in">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
               <div>
-                <h2 className="text-xl font-semibold">Student Submissions</h2>
-                <p className="text-sm text-muted-foreground">
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">Student Submissions</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
                   Click a row to view the detailed result.
                 </p>
               </div>
