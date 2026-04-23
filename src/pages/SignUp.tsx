@@ -15,6 +15,7 @@ import SocialButton from '@/components/auth/SocialButton';
 import { signInWithGoogle } from '@/lib/googleAuth';
 import EmailField from '@/components/auth/EmailField';
 import PasswordField from '@/components/auth/PasswordField';
+import useResendCooldown from '@/hooks/useResendCooldown';
 
 const formSchema = z
   .object({
@@ -39,6 +40,7 @@ const SignUp = () => {
   const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { seconds: cooldownSeconds, isActive: cooldownActive, start: startCooldown } = useResendCooldown(30);
   const accentColor = userType === 'teacher' ? '#4F46E5' : '#7C3AED';
 
   const form = useForm<FormValues>({
@@ -74,12 +76,13 @@ const SignUp = () => {
       // Email confirmation required: do not auto-login
       setSignedUpEmail(values.email);
       setSuccessMsg('Verification email sent. Please check your inbox before logging in.');
-      form.reset();
-      setTimeout(() => navigate('/login'), 4000);
+      // Keep email pre-filled; clear only password fields
+      form.reset({ name: values.name, email: values.email, password: '', confirmPassword: '' });
+      startCooldown(30);
     } catch (error: any) {
       const raw = (error?.message || '').toLowerCase();
       if (raw.includes('already registered') || raw.includes('user already')) {
-        setErrorMsg('An account with this email already exists. Try signing in instead.');
+        setErrorMsg('This email is already registered. Try logging in.');
       } else {
         setErrorMsg(error?.message || 'Something went wrong. Please try again.');
       }
@@ -90,6 +93,7 @@ const SignUp = () => {
 
   const handleResendEmail = async () => {
     if (!signedUpEmail) return;
+    if (cooldownActive) return;
     setIsResending(true);
     try {
       const { error } = await supabase.auth.resend({
@@ -99,6 +103,7 @@ const SignUp = () => {
       });
       if (error) throw error;
       setSuccessMsg(`Verification email re-sent to ${signedUpEmail}.`);
+      startCooldown(30);
     } catch (error: any) {
       setErrorMsg(error?.message || 'Could not resend verification email.');
     } finally {
