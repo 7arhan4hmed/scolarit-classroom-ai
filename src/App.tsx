@@ -25,6 +25,7 @@ import Contact from "./pages/Contact";
 import ProfileSetup from "./pages/ProfileSetup";
 import Profile from "./pages/Profile";
 import Results from "./pages/Results";
+import TeacherDashboard from "./pages/TeacherDashboard";
 
 // Add custom keyframes for animations we need
 import "./animations.css";
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/for-teachers" element={<ForTeachers />} />
             <Route path="/for-students" element={<ForStudents />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/teacher-dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
