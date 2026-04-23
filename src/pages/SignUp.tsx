@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
-import { User, ArrowRight, ShieldCheck } from 'lucide-react';
+import { User, ArrowRight, ShieldCheck, AlertCircle, CheckCircle2, MailCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AuthLayout from '@/components/auth/AuthLayout';
 import RoleToggle from '@/components/auth/RoleToggle';
@@ -32,6 +32,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignUp = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [signedUpEmail, setSignedUpEmail] = useState<string>('');
+  const [isResending, setIsResending] = useState(false);
   const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -44,8 +48,10 @@ const SignUp = () => {
 
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    setErrorMsg(null);
+    setSuccessMsg(null);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -55,24 +61,48 @@ const SignUp = () => {
       });
       if (error) throw error;
 
-      localStorage.setItem(
-        'user',
-        JSON.stringify({ name: values.name, email: values.email, type: userType, profileComplete: false })
-      );
+      // If Supabase auto-confirms (email confirmation disabled), session exists → continue setup
+      if (data.session) {
+        toast({
+          title: 'Account created',
+          description: `Welcome to SCOLARIT, ${values.name}!`,
+        });
+        navigate(`/profile-setup?type=${userType}`);
+        return;
+      }
 
-      toast({
-        title: 'Account created',
-        description: `Welcome to SCOLARIT, ${values.name}!`,
-      });
-      navigate(`/profile-setup?type=${userType}`);
+      // Email confirmation required: do not auto-login
+      setSignedUpEmail(values.email);
+      setSuccessMsg('Verification email sent. Please check your inbox before logging in.');
+      form.reset();
+      setTimeout(() => navigate('/login'), 4000);
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Sign up failed',
-        description: error.message || 'Something went wrong. Please try again.',
-      });
+      const raw = (error?.message || '').toLowerCase();
+      if (raw.includes('already registered') || raw.includes('user already')) {
+        setErrorMsg('An account with this email already exists. Try signing in instead.');
+      } else {
+        setErrorMsg(error?.message || 'Something went wrong. Please try again.');
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!signedUpEmail) return;
+    setIsResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: signedUpEmail,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      setSuccessMsg(`Verification email re-sent to ${signedUpEmail}.`);
+    } catch (error: any) {
+      setErrorMsg(error?.message || 'Could not resend verification email.');
+    } finally {
+      setIsResending(false);
     }
   };
 
