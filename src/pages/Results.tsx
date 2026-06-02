@@ -46,6 +46,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { fetchResultForAssignment, type ResultRow } from '@/hooks/useAssignments';
+import SEO from '@/components/SEO';
 
 interface Assignment {
   id: string;
@@ -153,6 +154,7 @@ const ScoreRing: React.FC<{ score: number }> = ({ score }) => {
   const offset = circumference - (score / 100) * circumference;
   return (
     <div className="relative h-36 w-36">
+      <SEO title="Results | SCOLARIT" description="Review AI-generated grades, feedback, and improvement suggestions for your submitted assignments." path="/results" />
       <svg className="h-full w-full -rotate-90" viewBox="0 0 140 140">
         <circle cx="70" cy="70" r={radius} stroke="hsl(var(--muted))" strokeWidth="10" fill="none" />
         <circle

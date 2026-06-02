@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Lightbulb, History, TrendingUp, BarChart, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SEO from '@/components/SEO';
 
 const StudentFeatures = [
   {
@@ -42,6 +43,7 @@ const StudentFeatures = [
 const ForStudents = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="For Students | SCOLARIT" description="Get detailed, actionable feedback on your work in minutes. Improve faster with AI-powered insights from SCOLARIT." path="/for-students" />
       <Header />
       <main className="flex-grow">
         <section className="py-16 bg-white">

@@ -8,6 +8,7 @@ import AuthLayout from '@/components/auth/AuthLayout';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithGoogle } from '@/lib/googleAuth';
+import SEO from '@/components/SEO';
 
 const Login = () => {
   const [userType, setUserType] = useState<'teacher' | 'student'>('teacher');
@@ -23,6 +24,7 @@ const Login = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[hsl(220,20%,98%)]">
+        <SEO title="Log In | SCOLARIT" description="Log in to SCOLARIT to access AI-powered grading, feedback, and analytics for your classroom." path="/login" />
         <div className="animate-spin rounded-full h-10 w-10 border-2 border-[hsl(220,15%,88%)] border-t-[#4F46E5]" />
       </div>
     );

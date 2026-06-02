@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import TeacherProfileForm from '@/components/profile/TeacherProfileForm';
 import StudentProfileForm from '@/components/profile/StudentProfileForm';
 import { Shield, Lock, Database, Loader2 } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 const ProfileSetup = () => {
   const [searchParams] = useSearchParams();
@@ -114,6 +115,7 @@ const ProfileSetup = () => {
   if (authLoading || initialLoading) {
     return (
       <div className="min-h-screen flex flex-col">
+        <SEO title="Profile Setup | SCOLARIT" description="Complete your SCOLARIT profile to personalize your grading experience." path="/profile-setup" />
         <Header />
         <main className="flex-grow flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
