@@ -14,6 +14,7 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import SEO from '@/components/SEO';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -62,6 +63,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO title="Dashboard | SCOLARIT" description="Your SCOLARIT dashboard: track assignments, student progress, and AI grading activity at a glance." path="/dashboard" />
       <Header />
       <main className="flex-grow py-8 md:py-12">
         <div className="container mx-auto px-4 max-w-7xl space-y-10">

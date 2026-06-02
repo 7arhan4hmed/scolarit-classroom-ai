@@ -20,6 +20,7 @@ import SecuritySection from '@/components/profile/SecuritySection';
 import ConnectedAccountsSection from '@/components/profile/ConnectedAccountsSection';
 import NotificationsSection from '@/components/profile/NotificationsSection';
 import PrivacySection from '@/components/profile/PrivacySection';
+import SEO from '@/components/SEO';
 
 const Profile = () => {
   const [loading, setLoading] = useState(true);
@@ -174,6 +175,7 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
+        <SEO title="Profile | SCOLARIT" description="Manage your SCOLARIT profile, security settings, notifications, and connected accounts." path="/profile" />
         <Header />
         <main className="flex-grow flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />

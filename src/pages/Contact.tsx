@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, MessageSquare, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { z } from 'zod';
+import SEO from '@/components/SEO';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -107,6 +108,7 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO title="Contact Us | SCOLARIT" description="Get in touch with the SCOLARIT team for support, billing, feedback, or feature requests. We reply within one business day." path="/contact" />
       <Header />
       <main className="flex-grow py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-5xl">

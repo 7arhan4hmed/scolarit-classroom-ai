@@ -28,6 +28,7 @@ import {
 } from 'recharts';
 import { FileText, GraduationCap, TrendingUp, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import SEO from '@/components/SEO';
 
 const TeacherDashboard = () => {
   const { user, loading: authLoading } = useAuth();
@@ -95,6 +96,7 @@ const TeacherDashboard = () => {
   if (!roleChecked || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
+        <SEO title="Teacher Dashboard | SCOLARIT" description="Track student performance, submissions, and AI grading insights from your SCOLARIT teacher dashboard." path="/teacher-dashboard" />
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
     );

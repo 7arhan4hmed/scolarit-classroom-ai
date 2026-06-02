@@ -13,6 +13,7 @@ import UploadStep from '@/components/upload/UploadStep';
 import AssessmentStep from '@/components/upload/AssessmentStep';
 import { extractTextFromFiles } from '@/services/fileParser';
 import { gradeAssignment } from '@/services/aiGrader';
+import SEO from '@/components/SEO';
 
 interface FileWithValidation {
   file: File;
@@ -142,6 +143,7 @@ const UploadAssignments = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Upload Assignments | SCOLARIT" description="Upload student work to SCOLARIT and let AI grade it with rubric-based feedback in minutes." path="/upload" />
       <Header />
       <main className="flex-grow py-12">
         <div className="container mx-auto px-4">

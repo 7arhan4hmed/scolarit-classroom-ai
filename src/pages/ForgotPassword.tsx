@@ -9,6 +9,7 @@ import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { BookOpen, Mail, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import SEO from '@/components/SEO';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -60,6 +61,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <SEO title="Reset Password | SCOLARIT" description="Reset your SCOLARIT password securely. We'll email you a link to choose a new password." path="/forgot-password" />
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">

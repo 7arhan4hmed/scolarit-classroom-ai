@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, RefreshCw, Download, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 // Mock data for classes and assignments
 const mockClasses = [
@@ -87,6 +88,7 @@ const CanvasPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Canvas Integration | SCOLARIT" description="Connect SCOLARIT with Canvas to sync classes and grade assignments with AI directly from your LMS." path="/canvas" />
       <Header />
       <main className="flex-grow bg-gray-50 pt-6 pb-16">
         <div className="container mx-auto px-4">

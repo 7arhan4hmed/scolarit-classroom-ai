@@ -16,6 +16,7 @@ import { signInWithGoogle } from '@/lib/googleAuth';
 import EmailField from '@/components/auth/EmailField';
 import PasswordField from '@/components/auth/PasswordField';
 import useResendCooldown from '@/hooks/useResendCooldown';
+import SEO from '@/components/SEO';
 
 const formSchema = z
   .object({
@@ -113,6 +114,7 @@ const SignUp = () => {
 
   return (
     <AuthLayout accent={userType}>
+      <SEO title="Sign Up | SCOLARIT" description="Create your free SCOLARIT account and start grading assignments with AI in minutes." path="/signup" />
       <div className="space-y-8 animate-fade-in">
         <div className="space-y-2">
           <h2 className="text-2xl sm:text-3xl font-bold font-display text-[hsl(220,15%,12%)] tracking-tight">

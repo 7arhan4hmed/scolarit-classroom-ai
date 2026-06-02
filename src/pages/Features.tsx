@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Bot, MessageSquare, ClipboardCheck, Upload, BarChart3, Link2, Shield } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import FeatureTour from '@/components/features/FeatureTour';
+import SEO from '@/components/SEO';
 
 const features = [
   {
@@ -47,6 +48,7 @@ const features = [
 const Features = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="Features | SCOLARIT" description="Explore SCOLARIT features: AI grading, detailed feedback, custom rubrics, analytics, and LMS integrations for educators." path="/features" />
       <Header />
       <main className="flex-grow">
         {/* Hero Section */}

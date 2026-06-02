@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Check, Clock, FileText, PieChart, Users, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SEO from '@/components/SEO';
 
 const TeacherFeatures = [
   {
@@ -42,6 +43,7 @@ const TeacherFeatures = [
 const ForTeachers = () => {
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title="For Teachers | SCOLARIT" description="Save 70% of grading time with SCOLARIT. Built for teachers who want consistent, personalized feedback at scale." path="/for-teachers" />
       <Header />
       <main className="flex-grow">
         <section className="py-16 bg-white">

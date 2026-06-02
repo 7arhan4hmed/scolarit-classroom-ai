@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, RefreshCw, Download, Clock, CheckCircle2, AlertTriangle, Loader2, FileText, BookOpen } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SEO from '@/components/SEO';
 
 interface Assignment {
   id: string;
@@ -129,6 +130,7 @@ const GoogleClassroomPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO title="Google Classroom Integration | SCOLARIT" description="Sync Google Classroom with SCOLARIT to import assignments and grade them with AI in one click." path="/google-classroom" />
       <Header />
       <main className="flex-grow pt-6 pb-16">
         <div className="container mx-auto px-4">
