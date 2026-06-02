@@ -48,7 +48,7 @@ const IntegrationsSection = () => {
                 <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600/10 to-purple-500/10 mb-4">
                   <img 
                     src={integration.icon} 
-                    alt={integration.name}
+                    alt={`${integration.name} logo`}
                     className="w-8 h-8 object-contain"
                     onError={(e) => {
                       e.currentTarget.src = "/placeholder.svg";

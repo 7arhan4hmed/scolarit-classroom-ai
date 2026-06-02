@@ -52,7 +52,9 @@ const ForTeachers = () => {
                 Revolutionize your assessment workflow and reclaim your valuable time.
               </p>
             </div>
-            
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-center gradient-text">
+              Why Teachers Choose SCOLARIT
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {TeacherFeatures.map((feature, index) => (
                 <div key={index} className="bg-white rounded-xl border p-6 shadow-sm">
